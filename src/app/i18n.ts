@@ -1,0 +1,43 @@
+export const translations = {
+  en: {
+    appTitle: 'Oh My Music Studio',
+    systemInfo: 'System Information',
+    platform: 'Platform',
+    hostname: 'Hostname',
+    cpu: 'CPU',
+    memory: 'Memory',
+    uptime: 'Uptime',
+    musicSoftware: 'Music Software',
+    daw: 'DAW',
+    plugins: 'Plugins',
+    noSoftware: 'No music software detected yet.',
+    loading: 'Loading...',
+    version: 'Version',
+    expand: 'Expand',
+    collapse: 'Collapse',
+    pluginsCount: '{{count}} plugins',
+    language: 'Language',
+  },
+  zh: {
+    appTitle: '我的音乐工作室',
+    systemInfo: '系统信息',
+    platform: '平台',
+    hostname: '主机名',
+    cpu: '处理器',
+    memory: '内存',
+    uptime: '运行时间',
+    musicSoftware: '音乐软件',
+    daw: 'DAW',
+    plugins: '插件',
+    noSoftware: '未检测到音乐软件。',
+    loading: '加载中...',
+    version: '版本',
+    expand: '展开',
+    collapse: '收起',
+    pluginsCount: '{{count}} 个插件',
+    language: '语言',
+  },
+};
+
+export type Language = 'en' | 'zh';
+export type TranslationKey = keyof typeof translations.en;
