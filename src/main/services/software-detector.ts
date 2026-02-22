@@ -87,47 +87,45 @@ async function searchAppInApplications(keywords: string[]): Promise<string | nul
 }
 
 const MAC_DAW_CONFIGS: SoftwareConfig[] = [
-  { name: 'Logic Pro', searchKeywords: ['logic', 'pro'], type: 'daw', vendor: 'Apple' },
-  { name: 'Ableton Live', searchKeywords: ['ableton', 'live'], type: 'daw', vendor: 'Ableton' },
-  { name: 'Pro Tools', searchKeywords: ['pro', 'tools'], type: 'daw', vendor: 'Avid' },
-  { name: 'FL Studio', searchKeywords: ['fl', 'studio'], type: 'daw', vendor: 'Image-Line' },
+  { name: 'Logic Pro', searchKeywords: ['logic pro'], type: 'daw', vendor: 'Apple' },
+  { name: 'Ableton Live', searchKeywords: ['ableton live'], type: 'daw', vendor: 'Ableton' },
+  { name: 'Pro Tools', searchKeywords: ['pro tools'], type: 'daw', vendor: 'Avid' },
+  { name: 'FL Studio', searchKeywords: ['fl studio'], type: 'daw', vendor: 'Image-Line' },
   { name: 'Cubase', searchKeywords: ['cubase'], type: 'daw', vendor: 'Steinberg' },
   { name: 'Reaper', searchKeywords: ['reaper'], type: 'daw', vendor: 'Cockos' },
-  { name: 'Studio One', searchKeywords: ['studio', 'one'], type: 'daw', vendor: 'PreSonus' },
-  { name: 'Bitwig Studio', searchKeywords: ['bitwig', 'studio'], type: 'daw', vendor: 'Bitwig' },
+  { name: 'Studio One', searchKeywords: ['studio one'], type: 'daw', vendor: 'PreSonus' },
+  { name: 'Bitwig Studio', searchKeywords: ['bitwig studio'], type: 'daw', vendor: 'Bitwig' },
   { name: 'GarageBand', searchKeywords: ['garageband'], type: 'daw', vendor: 'Apple' },
   { name: 'Reason', searchKeywords: ['reason'], type: 'daw', vendor: 'Reason Studios' },
-  { name: 'Digital Performer', searchKeywords: ['digital', 'performer'], type: 'daw', vendor: 'MOTU' },
+  { name: 'Digital Performer', searchKeywords: ['digital performer'], type: 'daw', vendor: 'MOTU' },
   { name: 'Waveform', searchKeywords: ['waveform'], type: 'daw', vendor: 'Tracktion' },
   { name: 'Dorico', searchKeywords: ['dorico'], type: 'daw', vendor: 'Steinberg' },
-  { name: 'Audacity', searchKeywords: ['audacity'], type: 'daw', vendor: 'Audacity' },
 ];
 
 const MAC_AUXILIARY_CONFIGS: SoftwareConfig[] = [
   { name: 'AmpliTube', searchKeywords: ['amplitube'], type: 'daw', vendor: 'IK Multimedia' },
   { name: 'TONEX', searchKeywords: ['tonex'], type: 'daw', vendor: 'IK Multimedia' },
   { name: 'SampleTank', searchKeywords: ['sampletank'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'ARC', searchKeywords: ['arc', 'system'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'Synergy Studio', searchKeywords: ['synergy'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'Minitool', searchKeywords: ['minitool'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'Guitar Rig', searchKeywords: ['guitar', 'rig'], type: 'daw', vendor: 'Native Instruments' },
+  { name: 'ARC', searchKeywords: ['arc x'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'Synergy Studio', searchKeywords: ['synergy studio'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'Guitar Rig', searchKeywords: ['guitar rig'], type: 'daw', vendor: 'Native Instruments' },
   { name: 'Kontakt', searchKeywords: ['kontakt'], type: 'daw', vendor: 'Native Instruments' },
-  { name: 'Massive X', searchKeywords: ['massive'], type: 'daw', vendor: 'Native Instruments' },
+  { name: 'Massive X', searchKeywords: ['massive x'], type: 'daw', vendor: 'Native Instruments' },
   { name: 'Reaktor', searchKeywords: ['reaktor'], type: 'daw', vendor: 'Native Instruments' },
   { name: 'Ozone', searchKeywords: ['ozone'], type: 'daw', vendor: 'iZotope' },
   { name: 'Neutron', searchKeywords: ['neutron'], type: 'daw', vendor: 'iZotope' },
   { name: 'RX', searchKeywords: ['rx'], type: 'daw', vendor: 'iZotope' },
   { name: 'Nectar', searchKeywords: ['nectar'], type: 'daw', vendor: 'iZotope' },
   { name: 'Melodyne', searchKeywords: ['melodyne'], type: 'daw', vendor: 'Celemony' },
-  { name: 'Auto-Tune', searchKeywords: ['auto', 'tune'], type: 'daw', vendor: 'Antares' },
+  { name: 'Auto-Tune', searchKeywords: ['auto-tune'], type: 'daw', vendor: 'Antares' },
   { name: 'Scaler', searchKeywords: ['scaler'], type: 'daw', vendor: 'Scaler Music' },
-  { name: 'Waves Central', searchKeywords: ['waves', 'central'], type: 'daw', vendor: 'Waves' },
+  { name: 'Waves Central', searchKeywords: ['waves central'], type: 'daw', vendor: 'Waves' },
   { name: 'FabFilter Pro-Q', searchKeywords: ['pro-q'], type: 'daw', vendor: 'FabFilter' },
-  { name: 'Universal Audio', searchKeywords: ['universal', 'audio', 'apollo', 'luna'], type: 'daw', vendor: 'Universal Audio' },
+  { name: 'Universal Audio', searchKeywords: ['universal audio', 'apollo', 'luna'], type: 'daw', vendor: 'Universal Audio' },
   { name: 'Softube', searchKeywords: ['softube'], type: 'daw', vendor: 'Softube' },
-  { name: 'Line 6', searchKeywords: ['line', 'helix', 'pod', 'farm'], type: 'daw', vendor: 'Line 6' },
-  { name: 'Neural DSP', searchKeywords: ['neural', 'dsp', 'qc'], type: 'daw', vendor: 'Neural DSP' },
-  { name: 'Positive Grid', searchKeywords: ['positive', 'grid', 'bias'], type: 'daw', vendor: 'Positive Grid' },
+  { name: 'Line 6', searchKeywords: ['line 6', 'helix', 'pod farm'], type: 'daw', vendor: 'Line 6' },
+  { name: 'Neural DSP', searchKeywords: ['neural dsp', 'qc'], type: 'daw', vendor: 'Neural DSP' },
+  { name: 'Positive Grid', searchKeywords: ['positive grid', 'bias fx'], type: 'daw', vendor: 'Positive Grid' },
   { name: 'Overloud', searchKeywords: ['overloud', 'th-u'], type: 'daw', vendor: 'Overloud' },
   { name: 'Apogee', searchKeywords: ['apogee'], type: 'daw', vendor: 'Apogee' },
   { name: 'RME', searchKeywords: ['rme', 'totalmix'], type: 'daw', vendor: 'RME' },
@@ -135,9 +133,8 @@ const MAC_AUXILIARY_CONFIGS: SoftwareConfig[] = [
 ];
 
 const MAC_DRIVER_CONFIGS: SoftwareConfig[] = [
-  { name: 'iLok License Manager', searchKeywords: ['ilok', 'license', 'manager'], type: 'daw', vendor: 'PACE' },
-  { name: 'AXE I/O', searchKeywords: ['axe', 'io'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'Steinberg', searchKeywords: ['elicenser'], type: 'daw', vendor: 'Steinberg' },
+  { name: 'iLok License Manager', searchKeywords: ['ilok license manager'], type: 'daw', vendor: 'PACE' },
+  { name: 'AXE I/O', searchKeywords: ['axe i/o'], type: 'daw', vendor: 'IK Multimedia' },
 ];
 
 const MAC_PLUGIN_PATHS = {
@@ -147,83 +144,105 @@ const MAC_PLUGIN_PATHS = {
   aax: ['/Library/Application Support/Avid/Audio/Plug-ins', '~/Library/Application Support/Avid/Audio/Plug-ins'],
 };
 
-const VENDOR_KEYWORDS: [string, string][] = [
-  ['IK Multimedia', 'IK Multimedia'],
-  ['AmpliTube', 'IK Multimedia'],
-  ['SampleTank', 'IK Multimedia'],
-  ['TONEX', 'IK Multimedia'],
-  ['ARC', 'IK Multimedia'],
-  ['Synergy', 'IK Multimedia'],
-  ['Minitool', 'IK Multimedia'],
-  ['Native Instruments', 'Native Instruments'],
-  ['Kontakt', 'Native Instruments'],
-  ['Massive', 'Native Instruments'],
-  ['Reaktor', 'Native Instruments'],
-  ['Guitar Rig', 'Native Instruments'],
-  ['iZotope', 'iZotope'],
-  ['Ozone', 'iZotope'],
-  ['Neutron', 'iZotope'],
-  ['RX', 'iZotope'],
-  ['Nectar', 'iZotope'],
-  ['Waves', 'Waves'],
-  ['FabFilter', 'FabFilter'],
-  ['Softube', 'Softube'],
-  ['Soundtoys', 'Soundtoys'],
-  ['Spectrasonics', 'Spectrasonics'],
-  ['Arturia', 'Arturia'],
-  ['Universal Audio', 'Universal Audio'],
-  ['UAD', 'Universal Audio'],
-  ['Steinberg', 'Steinberg'],
-  ['Cubase', 'Steinberg'],
-  ['Ableton', 'Ableton'],
-  ['Avid', 'Avid'],
-  ['Pro Tools', 'Avid'],
-  ['Image-Line', 'Image-Line'],
-  ['FL Studio', 'Image-Line'],
-  ['Cockos', 'Cockos'],
-  ['Reaper', 'Cockos'],
-  ['PreSonus', 'PreSonus'],
-  ['Studio One', 'PreSonus'],
-  ['Bitwig', 'Bitwig'],
-  ['Reason Studios', 'Reason Studios'],
-  ['MOTU', 'MOTU'],
-  ['Celemony', 'Celemony'],
-  ['Melodyne', 'Celemony'],
-  ['Antares', 'Antares'],
-  ['Auto-Tune', 'Antares'],
-  ['Scaler Music', 'Scaler Music'],
-  ['Scaler', 'Scaler Music'],
-  ['Line 6', 'Line 6'],
-  ['Helix', 'Line 6'],
-  ['Neural DSP', 'Neural DSP'],
-  ['Positive Grid', 'Positive Grid'],
-  ['Overloud', 'Overloud'],
-  ['Apogee', 'Apogee'],
-  ['RME', 'RME'],
-  ['Focusrite', 'Focusrite'],
-  ['Roland', 'Roland'],
-  ['Korg', 'Korg'],
-  ['Arturia', 'Arturia'],
-  ['u-he', 'u-he'],
-  ['UVI', 'UVI'],
-  ['Valhalla DSP', 'Valhalla DSP'],
-  ['Eventide', 'Eventide'],
-  ['SSL', 'SSL'],
-  ['Brainworx', 'Brainworx'],
-  ['Plugin Alliance', 'Plugin Alliance'],
-  ['Tokyo Dawn', 'Tokyo Dawn Records'],
-  ['Melda', 'Melda Production'],
+const VENDOR_KEYWORDS: [RegExp, string][] = [
+  [/amplitube/i, 'IK Multimedia'],
+  [/tonex/i, 'IK Multimedia'],
+  [/sampletank/i, 'IK Multimedia'],
+  [/arc/i, 'IK Multimedia'],
+  [/synergy/i, 'IK Multimedia'],
+  [/native instruments/i, 'Native Instruments'],
+  [/kontakt/i, 'Native Instruments'],
+  [/massive/i, 'Native Instruments'],
+  [/reaktor/i, 'Native Instruments'],
+  [/guitar rig/i, 'Native Instruments'],
+  [/izotope/i, 'iZotope'],
+  [/ozone/i, 'iZotope'],
+  [/neutron/i, 'iZotope'],
+  [/^rx\b/i, 'iZotope'],
+  [/nectar/i, 'iZotope'],
+  [/waves/i, 'Waves'],
+  [/fabfilter/i, 'FabFilter'],
+  [/pro.q/i, 'FabFilter'],
+  [/softube/i, 'Softube'],
+  [/\s+v\d+$/, 'Softube'],
+  [/soundtoys/i, 'Soundtoys'],
+  [/spectrasonics/i, 'Spectrasonics'],
+  [/omnisphere/i, 'Spectrasonics'],
+  [/keyscape/i, 'Spectrasonics'],
+  [/arturia/i, 'Arturia'],
+  [/pigments/i, 'Arturia'],
+  [/universal audio/i, 'Universal Audio'],
+  [/uad\b/i, 'Universal Audio'],
+  [/steinberg/i, 'Steinberg'],
+  [/cubase/i, 'Steinberg'],
+  [/ableton/i, 'Ableton'],
+  [/avid/i, 'Avid'],
+  [/pro tools/i, 'Avid'],
+  [/image.line/i, 'Image-Line'],
+  [/fl studio/i, 'Image-Line'],
+  [/cockos/i, 'Cockos'],
+  [/reaper/i, 'Cockos'],
+  [/presonus/i, 'PreSonus'],
+  [/studio one/i, 'PreSonus'],
+  [/bitwig/i, 'Bitwig'],
+  [/reason/i, 'Reason Studios'],
+  [/motu/i, 'MOTU'],
+  [/celemony/i, 'Celemony'],
+  [/melodyne/i, 'Celemony'],
+  [/antares/i, 'Antares'],
+  [/auto.tune/i, 'Antares'],
+  [/scaler/i, 'Scaler Music'],
+  [/line.6/i, 'Line 6'],
+  [/helix/i, 'Line 6'],
+  [/neural.dsp/i, 'Neural DSP'],
+  [/positive.grid/i, 'Positive Grid'],
+  [/bias.fx/i, 'Positive Grid'],
+  [/overloud/i, 'Overloud'],
+  [/apogee/i, 'Apogee'],
+  [/rme/i, 'RME'],
+  [/focusrite/i, 'Focusrite'],
+  [/ssl/i, 'SSL'],
+  [/brainworx/i, 'Brainworx'],
+  [/^bx_/i, 'Brainworx'],
+  [/plugin.alliance/i, 'Plugin Alliance'],
+  [/maag/i, 'Maag Audio'],
+  [/neve/i, 'Neve'],
+  [/api/i, 'API'],
+  [/elysia/i, 'Elysia'],
+  [/shadow.hills/i, 'Shadow Hills'],
+  [/tokyo.dawn/i, 'Tokyo Dawn Records'],
+  [/valhalla/i, 'Valhalla DSP'],
+  [/eventide/i, 'Eventide'],
+  [/h.reverb/i, 'Eventide'],
+  [/timefactor/i, 'Eventide'],
+  [/melda/i, 'Melda Production'],
+  [/u.he/i, 'u-he'],
+  [/viola/i, 'Viola'],
+  [/korg/i, 'Korg'],
+  [/roland/i, 'Roland'],
+  [/yamaha/i, 'YAMAHA'],
+  [/air/i, 'Air'],
+  [/audacity/i, 'Audacity'],
 ];
 
-function extractVendorFromPluginName(name: string): string {
-  const lowerName = name.toLowerCase();
-  for (const [keyword, vendor] of VENDOR_KEYWORDS) {
-    if (lowerName.includes(keyword.toLowerCase())) {
+export function extractVendorFromPluginName(name: string): string {
+  for (const [pattern, vendor] of VENDOR_KEYWORDS) {
+    if (pattern.test(name)) {
       return vendor;
     }
   }
   return 'Other';
 }
+
+const APP_NAMES_TO_EXCLUDE_FROM_PLUGINS = new Set([
+  'amplitube', 'tonex', 'sampletank', 'arc', 'synergy',
+  'guitar rig', 'kontakt', 'massive', 'reaktor',
+  'ozone', 'neutron', 'rx', 'nectar',
+  'melodyne', 'auto-tune', 'scaler', 'waves central',
+  'pro-q', 'softube', 'line 6', 'helix',
+  'neural dsp', 'positive grid', 'bias fx', 'overloud',
+  'apogee', 'rme', 'focusrite', 'ilok license manager',
+]);
 
 async function scanPluginsForType(
   type: 'vst' | 'vst3' | 'au' | 'aax',
@@ -248,7 +267,15 @@ async function scanPluginsForType(
           const cleanName = entry.name
             .replace(/\.vst3$/i, '')
             .replace(/\.component$/i, '')
-            .replace(/\.dll$/i, '');
+            .replace(/\.dll$/i, '')
+            .replace(/\s+v\d+$/i, '')
+            .trim();
+
+          const lowerName = cleanName.toLowerCase();
+          
+          if (APP_NAMES_TO_EXCLUDE_FROM_PLUGINS.has(lowerName)) {
+            continue;
+          }
 
           plugins.push({
             name: cleanName,
