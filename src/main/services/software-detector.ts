@@ -17,7 +17,7 @@ export interface MusicSoftware {
 
 interface SoftwareConfig {
   name: string;
-  spotlightNames: string[];
+  searchKeywords: string[];
   type: 'daw';
   vendor?: string;
 }
@@ -56,7 +56,7 @@ async function spotlightSearch(appName: string): Promise<string | null> {
   }
 }
 
-async function searchAppInApplications(appName: string): Promise<string | null> {
+async function searchAppInApplications(keywords: string[]): Promise<string | null> {
   const searchPaths = [
     '/Applications',
     '/System/Applications',
@@ -67,12 +67,16 @@ async function searchAppInApplications(appName: string): Promise<string | null> 
     if (!fs.existsSync(searchPath)) continue;
     try {
       const files = fs.readdirSync(searchPath);
-      const lowerName = appName.toLowerCase().replace('.app', '');
       for (const file of files) {
-        if (file.toLowerCase().includes(lowerName)) {
-          if (file.endsWith('.app')) {
-            return path.join(searchPath, file);
-          }
+        if (!file.endsWith('.app')) continue;
+        
+        const fileLower = file.toLowerCase();
+        const matches = keywords.every(keyword => 
+          keyword.length <= 2 || fileLower.includes(keyword.toLowerCase())
+        );
+        
+        if (matches) {
+          return path.join(searchPath, file);
         }
       }
     } catch {
@@ -83,76 +87,57 @@ async function searchAppInApplications(appName: string): Promise<string | null> 
 }
 
 const MAC_DAW_CONFIGS: SoftwareConfig[] = [
-  { name: 'Logic Pro', spotlightNames: ['Logic Pro.app'], type: 'daw', vendor: 'Apple' },
-  { name: 'Ableton Live', spotlightNames: ['Ableton Live.app', 'Ableton Live 11.app', 'Ableton Live 12.app'], type: 'daw', vendor: 'Ableton' },
-  { name: 'Pro Tools', spotlightNames: ['Pro Tools.app', 'Pro Tools 2024.app'], type: 'daw', vendor: 'Avid' },
-  { name: 'FL Studio', spotlightNames: ['FL Studio.app', 'FL64.app'], type: 'daw', vendor: 'Image-Line' },
-  { name: 'Cubase', spotlightNames: ['Cubase 13.app', 'Cubase 12.app', 'Cubase 11.app', 'Cubase.app'], type: 'daw', vendor: 'Steinberg' },
-  { name: 'Reaper', spotlightNames: ['REAPER.app'], type: 'daw', vendor: 'Cockos' },
-  { name: 'Studio One', spotlightNames: ['Studio One 6.app', 'Studio One 5.app', 'Studio One.app'], type: 'daw', vendor: 'PreSonus' },
-  { name: 'Bitwig Studio', spotlightNames: ['Bitwig Studio 5.app', 'Bitwig Studio 4.app', 'Bitwig Studio.app'], type: 'daw', vendor: 'Bitwig' },
-  { name: 'GarageBand', spotlightNames: ['GarageBand.app'], type: 'daw', vendor: 'Apple' },
-  { name: 'Reason', spotlightNames: ['Reason 12.app', 'Reason 13.app', 'Reason.app'], type: 'daw', vendor: 'Reason Studios' },
-  { name: 'Digital Performer', spotlightNames: ['Digital Performer.app'], type: 'daw', vendor: 'MOTU' },
-  { name: 'Waveform', spotlightNames: ['Waveform.app', 'Waveform 12.app'], type: 'daw', vendor: 'Tracktion' },
-  { name: 'Dorico', spotlightNames: ['Dorico 5.app', 'Dorico 4.app', 'Dorico.app'], type: 'daw', vendor: 'Steinberg' },
-  { name: 'Audacity', spotlightNames: ['Audacity.app'], type: 'daw', vendor: 'Audacity' },
+  { name: 'Logic Pro', searchKeywords: ['logic', 'pro'], type: 'daw', vendor: 'Apple' },
+  { name: 'Ableton Live', searchKeywords: ['ableton', 'live'], type: 'daw', vendor: 'Ableton' },
+  { name: 'Pro Tools', searchKeywords: ['pro', 'tools'], type: 'daw', vendor: 'Avid' },
+  { name: 'FL Studio', searchKeywords: ['fl', 'studio'], type: 'daw', vendor: 'Image-Line' },
+  { name: 'Cubase', searchKeywords: ['cubase'], type: 'daw', vendor: 'Steinberg' },
+  { name: 'Reaper', searchKeywords: ['reaper'], type: 'daw', vendor: 'Cockos' },
+  { name: 'Studio One', searchKeywords: ['studio', 'one'], type: 'daw', vendor: 'PreSonus' },
+  { name: 'Bitwig Studio', searchKeywords: ['bitwig', 'studio'], type: 'daw', vendor: 'Bitwig' },
+  { name: 'GarageBand', searchKeywords: ['garageband'], type: 'daw', vendor: 'Apple' },
+  { name: 'Reason', searchKeywords: ['reason'], type: 'daw', vendor: 'Reason Studios' },
+  { name: 'Digital Performer', searchKeywords: ['digital', 'performer'], type: 'daw', vendor: 'MOTU' },
+  { name: 'Waveform', searchKeywords: ['waveform'], type: 'daw', vendor: 'Tracktion' },
+  { name: 'Dorico', searchKeywords: ['dorico'], type: 'daw', vendor: 'Steinberg' },
+  { name: 'Audacity', searchKeywords: ['audacity'], type: 'daw', vendor: 'Audacity' },
 ];
 
 const MAC_AUXILIARY_CONFIGS: SoftwareConfig[] = [
-  { name: 'AmpliTube 5', spotlightNames: ['AmpliTube 5.app'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'AmpliTube', spotlightNames: ['AmpliTube 4.app', 'AmpliTube 3.app'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'TONEX', spotlightNames: ['TONEX.app', 'TONEX MAX.app'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'SampleTank', spotlightNames: ['SampleTank 4.app', 'SampleTank 3.app', 'SampleTank.app'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'Guitar Rig', spotlightNames: ['Guitar Rig 7.app', 'Guitar Rig 6.app', 'Guitar Rig.app'], type: 'daw', vendor: 'Native Instruments' },
-  { name: 'Ozone', spotlightNames: ['Ozone 12.app', 'Ozone 11.app', 'Ozone 10.app', 'Ozone.app'], type: 'daw', vendor: 'iZotope' },
-  { name: 'Neutron', spotlightNames: ['Neutron 5.app', 'Neutron 4.app', 'Neutron 3.app', 'Neutron.app'], type: 'daw', vendor: 'iZotope' },
-  { name: 'RX', spotlightNames: ['RX 11.app', 'RX 10.app', 'RX 9.app', 'RX.app'], type: 'daw', vendor: 'iZotope' },
-  { name: 'Nectar', spotlightNames: ['Nectar 4.app', 'Nectar 3.app', 'Nectar.app'], type: 'daw', vendor: 'iZotope' },
-  { name: 'Melodyne', spotlightNames: ['Melodyne 5.app', 'Melodyne 4.app', 'Melodyne.app'], type: 'daw', vendor: 'Celemony' },
-  { name: 'Auto-Tune', spotlightNames: ['Auto-Tune.app', 'Auto-Tune Pro.app'], type: 'daw', vendor: 'Antares' },
-  { name: 'Scaler', spotlightNames: ['Scaler 3.app', 'Scaler 2.app', 'Scaler.app'], type: 'daw', vendor: 'Scaler Music' },
-  { name: 'Kontakt', spotlightNames: ['Kontakt 7.app', 'Kontakt 6.app', 'Kontakt.app'], type: 'daw', vendor: 'Native Instruments' },
-  { name: 'Reaktor', spotlightNames: ['Reaktor 7.app', 'Reaktor 6.app', 'Reaktor.app'], type: 'daw', vendor: 'Native Instruments' },
-  { name: 'Massive X', spotlightNames: ['Massive X.app'], type: 'daw', vendor: 'Native Instruments' },
-  { name: 'Final Mix', spotlightNames: ['Final Mix.app'], type: 'daw', vendor: 'Waves' },
-  { name: 'Waves Central', spotlightNames: ['Waves Central.app'], type: 'daw', vendor: 'Waves' },
-  { name: 'FabFilter Pro-Q', spotlightNames: ['Pro-Q 3.app'], type: 'daw', vendor: 'FabFilter' },
-  { name: 'Universal Audio', spotlightNames: ['Universal Audio Apollo.app', 'UA LUNA.app'], type: 'daw', vendor: 'Universal Audio' },
-  { name: 'ARC', spotlightNames: ['ARC.app', 'ARC System 3.app'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'Synergy Studio', spotlightNames: ['Synergy Studio.app'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'Minitool', spotlightNames: ['Minitool.app'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'L6 Tone', spotlightNames: ['Tone.app', 'L6 Tone'], type: 'daw', vendor: 'Line 6' },
-  { name: 'Helix', spotlightNames: ['Helix.app', 'Helix Native.app'], type: 'daw', vendor: 'Line 6' },
-  { name: 'Scuffham', spotlightNames: ['S-Gear.app'], type: 'daw', vendor: 'Scuffham' },
-  { name: 'Neural DSP', spotlightNames: ['Neural DSP.app', 'QC App.app'], type: 'daw', vendor: 'Neural DSP' },
-  { name: 'Positive Grid', spotlightNames: ['Positive Grid App.app', 'Bias FX.app'], type: 'daw', vendor: 'Positive Grid' },
-  { name: 'MThome', spotlightNames: ['MThome Pro.app'], type: 'daw', vendor: 'Mercurial' },
-  { name: 'Hotone', spotlightNames: ['Hotone Ampero.app'], type: 'daw', vendor: 'Hotone' },
-  { name: 'Overloud', spotlightNames: ['Overloud TH-U.app', 'TH-U Premium.app'], type: 'daw', vendor: 'Overloud' },
-  { name: 'Acoustic Reality', spotlightNames: ['AR Machine Head.app'], type: 'daw', vendor: 'Acoustic Reality' },
-  { name: 'Softube', spotlightNames: ['Softube Central.app'], type: 'daw', vendor: 'Softube' },
-  { name: 'Plugin Doctor', spotlightNames: ['Plugin Doctor.app'], type: 'daw', vendor: 'Sugar Bytes' },
-  { name: 'Trovert', spotlightNames: ['Trovert.app'], type: 'daw', vendor: 'Softube' },
-  { name: 'Eleven', spotlightNames: ['Eleven Lite.app', 'Eleven MK II.app'], type: 'daw', vendor: 'Avid' },
-  { name: 'Vacuum Pro', spotlightNames: ['Vacuum Pro.app'], type: 'daw', vendor: 'Waves' },
-  { name: 'Voices', spotlightNames: ['Voices.app'], type: 'daw', vendor: 'Waves' },
-  { name: 'SoundGrid', spotlightNames: ['SoundGrid Studio.app'], type: 'daw', vendor: 'Waves' },
+  { name: 'AmpliTube', searchKeywords: ['amplitube'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'TONEX', searchKeywords: ['tonex'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'SampleTank', searchKeywords: ['sampletank'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'ARC', searchKeywords: ['arc', 'system'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'Synergy Studio', searchKeywords: ['synergy'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'Minitool', searchKeywords: ['minitool'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'Guitar Rig', searchKeywords: ['guitar', 'rig'], type: 'daw', vendor: 'Native Instruments' },
+  { name: 'Kontakt', searchKeywords: ['kontakt'], type: 'daw', vendor: 'Native Instruments' },
+  { name: 'Massive X', searchKeywords: ['massive'], type: 'daw', vendor: 'Native Instruments' },
+  { name: 'Reaktor', searchKeywords: ['reaktor'], type: 'daw', vendor: 'Native Instruments' },
+  { name: 'Ozone', searchKeywords: ['ozone'], type: 'daw', vendor: 'iZotope' },
+  { name: 'Neutron', searchKeywords: ['neutron'], type: 'daw', vendor: 'iZotope' },
+  { name: 'RX', searchKeywords: ['rx'], type: 'daw', vendor: 'iZotope' },
+  { name: 'Nectar', searchKeywords: ['nectar'], type: 'daw', vendor: 'iZotope' },
+  { name: 'Melodyne', searchKeywords: ['melodyne'], type: 'daw', vendor: 'Celemony' },
+  { name: 'Auto-Tune', searchKeywords: ['auto', 'tune'], type: 'daw', vendor: 'Antares' },
+  { name: 'Scaler', searchKeywords: ['scaler'], type: 'daw', vendor: 'Scaler Music' },
+  { name: 'Waves Central', searchKeywords: ['waves', 'central'], type: 'daw', vendor: 'Waves' },
+  { name: 'FabFilter Pro-Q', searchKeywords: ['pro-q'], type: 'daw', vendor: 'FabFilter' },
+  { name: 'Universal Audio', searchKeywords: ['universal', 'audio', 'apollo', 'luna'], type: 'daw', vendor: 'Universal Audio' },
+  { name: 'Softube', searchKeywords: ['softube'], type: 'daw', vendor: 'Softube' },
+  { name: 'Line 6', searchKeywords: ['line', 'helix', 'pod', 'farm'], type: 'daw', vendor: 'Line 6' },
+  { name: 'Neural DSP', searchKeywords: ['neural', 'dsp', 'qc'], type: 'daw', vendor: 'Neural DSP' },
+  { name: 'Positive Grid', searchKeywords: ['positive', 'grid', 'bias'], type: 'daw', vendor: 'Positive Grid' },
+  { name: 'Overloud', searchKeywords: ['overloud', 'th-u'], type: 'daw', vendor: 'Overloud' },
+  { name: 'Apogee', searchKeywords: ['apogee'], type: 'daw', vendor: 'Apogee' },
+  { name: 'RME', searchKeywords: ['rme', 'totalmix'], type: 'daw', vendor: 'RME' },
+  { name: 'Focusrite', searchKeywords: ['focusrite'], type: 'daw', vendor: 'Focusrite' },
 ];
 
 const MAC_DRIVER_CONFIGS: SoftwareConfig[] = [
-  { name: 'iLok License Manager', spotlightNames: ['iLok License Manager.app'], type: 'daw', vendor: 'PACE' },
-  { name: 'AXE I/O Interface', spotlightNames: ['AXE I/O Interface.app', 'Axe I/O ControlPanel.app'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'AXE I/O Next', spotlightNames: ['AXE I/O Next ControlPanel.app'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'iConnectivity', spotlightNames: ['iConnectivity Config.app'], type: 'daw', vendor: 'iConnectivity' },
-  { name: 'Universal Audio Driver', spotlightNames: ['UAD Driver.app'], type: 'daw', vendor: 'Universal Audio' },
-  { name: 'Apogee', spotlightNames: ['Apogee Control 2.app', 'Apogee Maestro.app'], type: 'daw', vendor: 'Apogee' },
-  { name: 'RME', spotlightNames: ['RME Fireface Settings.app', 'TotalMix FX.app'], type: 'daw', vendor: 'RME' },
-  { name: 'Focusrite', spotlightNames: ['Focusrite Control.app', 'Focusrite Scarlett 2i2.app'], type: 'daw', vendor: 'Focusrite' },
-  { name: 'PreSonus', spotlightNames: ['PreSonus UC Surface.app', 'Universal Control.app'], type: 'daw', vendor: 'PreSonus' },
-  { name: 'Steinberg', spotlightNames: ['eLicenser Control.app'], type: 'daw', vendor: 'Steinberg' },
-  { name: 'Yamaha', spotlightNames: ['Yamaha Steinberg FW Driver.app'], type: 'daw', vendor: 'Yamaha' },
-  { name: 'Roland', spotlightNames: ['Roland Driver Installer.app'], type: 'daw', vendor: 'Roland' },
+  { name: 'iLok License Manager', searchKeywords: ['ilok', 'license', 'manager'], type: 'daw', vendor: 'PACE' },
+  { name: 'AXE I/O', searchKeywords: ['axe', 'io'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'Steinberg', searchKeywords: ['elicenser'], type: 'daw', vendor: 'Steinberg' },
 ];
 
 const MAC_PLUGIN_PATHS = {
@@ -163,7 +148,6 @@ const MAC_PLUGIN_PATHS = {
 };
 
 const VENDOR_KEYWORDS: [string, string][] = [
-  ['IK Multimedia', 'IK Multimedia'],
   ['IK Multimedia', 'IK Multimedia'],
   ['AmpliTube', 'IK Multimedia'],
   ['SampleTank', 'IK Multimedia'],
@@ -176,42 +160,22 @@ const VENDOR_KEYWORDS: [string, string][] = [
   ['Massive', 'Native Instruments'],
   ['Reaktor', 'Native Instruments'],
   ['Guitar Rig', 'Native Instruments'],
-  ['Absynth', 'Native Instruments'],
-  ['FM8', 'Native Instruments'],
-  ['Monark', 'Native Instruments'],
   ['iZotope', 'iZotope'],
   ['Ozone', 'iZotope'],
   ['Neutron', 'iZotope'],
   ['RX', 'iZotope'],
   ['Nectar', 'iZotope'],
-  ['Vocalsynth', 'iZotope'],
-  ['Stutter Edit', 'iZotope'],
   ['Waves', 'Waves'],
   ['FabFilter', 'FabFilter'],
-  ['Pro-Q', 'FabFilter'],
-  ['Pro-C', 'FabFilter'],
-  ['Pro-L', 'FabFilter'],
-  ['Timeless', 'FabFilter'],
+  ['Softube', 'Softube'],
   ['Soundtoys', 'Soundtoys'],
-  ['Crystallizer', 'Soundtoys'],
-  ['EchoThon', 'Soundtoys'],
-  ['Decapitator', 'Soundtoys'],
   ['Spectrasonics', 'Spectrasonics'],
-  ['Omnisphere', 'Spectrasonics'],
-  ['Keyscape', 'Spectrasonics'],
-  ['Trilian', 'Spectrasonics'],
-  ['Stylus RMX', 'Spectrasonics'],
   ['Arturia', 'Arturia'],
-  ['Pigments', 'Arturia'],
-  ['V Collection', 'Arturia'],
   ['Universal Audio', 'Universal Audio'],
   ['UAD', 'Universal Audio'],
-  ['Apollo', 'Universal Audio'],
   ['Steinberg', 'Steinberg'],
   ['Cubase', 'Steinberg'],
-  ['Dorico', 'Steinberg'],
   ['Ableton', 'Ableton'],
-  ['Live', 'Ableton'],
   ['Avid', 'Avid'],
   ['Pro Tools', 'Avid'],
   ['Image-Line', 'Image-Line'],
@@ -222,77 +186,42 @@ const VENDOR_KEYWORDS: [string, string][] = [
   ['Studio One', 'PreSonus'],
   ['Bitwig', 'Bitwig'],
   ['Reason Studios', 'Reason Studios'],
-  ['Reason', 'Reason Studios'],
   ['MOTU', 'MOTU'],
-  ['Digital Performer', 'MOTU'],
-  ['Tracktion', 'Tracktion'],
-  ['Waveform', 'Tracktion'],
-  ['Valhalla DSP', 'Valhalla DSP'],
-  ['Valhalla', 'Valhalla DSP'],
-  ['Eventide', 'Eventide'],
-  ['H-Reverb', 'Eventide'],
-  ['Antares', 'Antares'],
-  ['Auto-Tune', 'Antares'],
   ['Celemony', 'Celemony'],
   ['Melodyne', 'Celemony'],
+  ['Antares', 'Antares'],
+  ['Auto-Tune', 'Antares'],
   ['Scaler Music', 'Scaler Music'],
   ['Scaler', 'Scaler Music'],
-  ['Xfer Records', 'Xfer Records'],
-  ['Serum', 'Xfer Records'],
-  ['Vital', 'Vital Audio'],
-  ['Softube', 'Softube'],
-  ['Marshall', 'Softube'],
-  ['SSL', 'SSL'],
-  ['Brainworx', 'Brainworx'],
-  ['Plugin Alliance', 'Plugin Alliance'],
-  ['Tokyo Dawn', 'Tokyo Dawn Records'],
-  ['TDR', 'Tokyo Dawn Records'],
-  ['Melda', 'Melda Production'],
   ['Line 6', 'Line 6'],
   ['Helix', 'Line 6'],
-  ['Pod Farm', 'Line 6'],
   ['Neural DSP', 'Neural DSP'],
   ['Positive Grid', 'Positive Grid'],
-  ['Bias FX', 'Positive Grid'],
   ['Overloud', 'Overloud'],
-  ['TH-U', 'Overloud'],
-  ['Acoustic Reality', 'Acoustic Reality'],
-  ['Scuffham', 'Scuffham'],
-  ['S-Gear', 'Scuffham'],
-  ['Hotone', 'Hotone'],
   ['Apogee', 'Apogee'],
   ['RME', 'RME'],
   ['Focusrite', 'Focusrite'],
-  ['Yamaha', 'Yamaha'],
   ['Roland', 'Roland'],
   ['Korg', 'Korg'],
   ['Arturia', 'Arturia'],
   ['u-he', 'u-he'],
-  ['Diva', 'u-he'],
-  ['Zebra', 'u-he'],
-  ['Cherry Audio', 'Cherry Audio'],
-  ['Syntronik', 'IK Multimedia'],
   ['UVI', 'UVI'],
-  ['Falcon', 'UVI'],
-  ['Viola', 'Viola'],
-  ['Maag', 'Maag Audio'],
-  ['Klanghelm', 'Klanghelm'],
-  ['Flux', 'Flux'],
-  ['Slate Digital', 'Slate Digital'],
-  ['Air', 'Air'],
-  ['Caelum Audio', 'Caelum Audio'],
-  ['D16 Group', 'D16 Group'],
+  ['Valhalla DSP', 'Valhalla DSP'],
+  ['Eventide', 'Eventide'],
+  ['SSL', 'SSL'],
+  ['Brainworx', 'Brainworx'],
+  ['Plugin Alliance', 'Plugin Alliance'],
+  ['Tokyo Dawn', 'Tokyo Dawn Records'],
+  ['Melda', 'Melda Production'],
 ];
 
 function extractVendorFromPluginName(name: string): string {
   const lowerName = name.toLowerCase();
-
   for (const [keyword, vendor] of VENDOR_KEYWORDS) {
     if (lowerName.includes(keyword.toLowerCase())) {
       return vendor;
     }
   }
-
   return 'Other';
 }
 
@@ -341,13 +270,8 @@ async function scanPluginsForType(
 }
 
 async function detectApp(config: SoftwareConfig, category: MusicSoftware['category']): Promise<MusicSoftware | null> {
-  for (const appName of config.spotlightNames) {
-    let appPath = await spotlightSearch(appName);
-    
-    if (!appPath) {
-      appPath = await searchAppInApplications(appName.replace('.app', ''));
-    }
-
+  for (const appName of config.searchKeywords) {
+    const appPath = await spotlightSearch(`${appName}.app`);
     if (appPath && fs.existsSync(appPath)) {
       const version = await getAppVersionMac(appPath);
       return {
@@ -361,6 +285,21 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
       };
     }
   }
+
+  const searchPath = await searchAppInApplications(config.searchKeywords);
+  if (searchPath && fs.existsSync(searchPath)) {
+    const version = await getAppVersionMac(searchPath);
+    return {
+      name: config.name,
+      path: searchPath,
+      version,
+      type: 'auxiliary',
+      category,
+      vendor: config.vendor,
+      detectedAt: Date.now(),
+    };
+  }
+  
   return null;
 }
 
