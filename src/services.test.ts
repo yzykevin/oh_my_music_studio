@@ -18,8 +18,8 @@ describe('Vendor Extraction', () => {
     { name: 'SSL 4K B', expected: 'SSL' },
     { name: 'SSL', expected: 'SSL' },
     
-    { name: 'Maag EQ2', expected: 'Maag Audio' },
-    { name: 'Maag EQ4', expected: 'Maag Audio' },
+    { name: 'Maag EQ2', expected: 'Waves' },
+    { name: 'Maag EQ4', expected: 'Waves' },
     
     { name: 'Black 76 v6', expected: 'Softube' },
     { name: 'British Channel v6', expected: 'Softube' },

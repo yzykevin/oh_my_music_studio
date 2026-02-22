@@ -69,12 +69,10 @@ async function searchAppInApplications(keywords: string[]): Promise<string | nul
       const files = fs.readdirSync(searchPath);
       for (const file of files) {
         if (!file.endsWith('.app')) continue;
-        
         const fileLower = file.toLowerCase();
         const matches = keywords.every(keyword => 
           keyword.length <= 2 || fileLower.includes(keyword.toLowerCase())
         );
-        
         if (matches) {
           return path.join(searchPath, file);
         }
@@ -90,7 +88,6 @@ const MAC_DAW_CONFIGS: SoftwareConfig[] = [
   { name: 'Logic Pro', searchKeywords: ['logic pro'], type: 'daw', vendor: 'Apple' },
   { name: 'Ableton Live', searchKeywords: ['ableton live'], type: 'daw', vendor: 'Ableton' },
   { name: 'Pro Tools', searchKeywords: ['pro tools'], type: 'daw', vendor: 'Avid' },
-  { name: 'FL Studio', searchKeywords: ['fl studio'], type: 'daw', vendor: 'Image-Line' },
   { name: 'Cubase', searchKeywords: ['cubase'], type: 'daw', vendor: 'Steinberg' },
   { name: 'Reaper', searchKeywords: ['reaper'], type: 'daw', vendor: 'Cockos' },
   { name: 'Studio One', searchKeywords: ['studio one'], type: 'daw', vendor: 'PreSonus' },
@@ -98,15 +95,13 @@ const MAC_DAW_CONFIGS: SoftwareConfig[] = [
   { name: 'GarageBand', searchKeywords: ['garageband'], type: 'daw', vendor: 'Apple' },
   { name: 'Reason', searchKeywords: ['reason'], type: 'daw', vendor: 'Reason Studios' },
   { name: 'Digital Performer', searchKeywords: ['digital performer'], type: 'daw', vendor: 'MOTU' },
-  { name: 'Waveform', searchKeywords: ['waveform'], type: 'daw', vendor: 'Tracktion' },
-  { name: 'Dorico', searchKeywords: ['dorico'], type: 'daw', vendor: 'Steinberg' },
 ];
 
 const MAC_AUXILIARY_CONFIGS: SoftwareConfig[] = [
   { name: 'AmpliTube', searchKeywords: ['amplitube'], type: 'daw', vendor: 'IK Multimedia' },
   { name: 'TONEX', searchKeywords: ['tonex'], type: 'daw', vendor: 'IK Multimedia' },
   { name: 'SampleTank', searchKeywords: ['sampletank'], type: 'daw', vendor: 'IK Multimedia' },
-  { name: 'ARC', searchKeywords: ['arc x'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'ARC', searchKeywords: ['arc x', 'arc'], type: 'daw', vendor: 'IK Multimedia' },
   { name: 'Synergy Studio', searchKeywords: ['synergy studio'], type: 'daw', vendor: 'IK Multimedia' },
   { name: 'Guitar Rig', searchKeywords: ['guitar rig'], type: 'daw', vendor: 'Native Instruments' },
   { name: 'Kontakt', searchKeywords: ['kontakt'], type: 'daw', vendor: 'Native Instruments' },
@@ -127,14 +122,11 @@ const MAC_AUXILIARY_CONFIGS: SoftwareConfig[] = [
   { name: 'Neural DSP', searchKeywords: ['neural dsp', 'qc'], type: 'daw', vendor: 'Neural DSP' },
   { name: 'Positive Grid', searchKeywords: ['positive grid', 'bias fx'], type: 'daw', vendor: 'Positive Grid' },
   { name: 'Overloud', searchKeywords: ['overloud', 'th-u'], type: 'daw', vendor: 'Overloud' },
-  { name: 'Apogee', searchKeywords: ['apogee'], type: 'daw', vendor: 'Apogee' },
-  { name: 'RME', searchKeywords: ['rme', 'totalmix'], type: 'daw', vendor: 'RME' },
-  { name: 'Focusrite', searchKeywords: ['focusrite'], type: 'daw', vendor: 'Focusrite' },
 ];
 
 const MAC_DRIVER_CONFIGS: SoftwareConfig[] = [
   { name: 'iLok License Manager', searchKeywords: ['ilok license manager'], type: 'daw', vendor: 'PACE' },
-  { name: 'AXE I/O', searchKeywords: ['axe i/o'], type: 'daw', vendor: 'IK Multimedia' },
+  { name: 'AXE I/O Interface', searchKeywords: ['axe', 'axe i/o'], type: 'daw', vendor: 'IK Multimedia' },
 ];
 
 const MAC_PLUGIN_PATHS = {
@@ -178,8 +170,6 @@ const VENDOR_KEYWORDS: [RegExp, string][] = [
   [/ableton/i, 'Ableton'],
   [/avid/i, 'Avid'],
   [/pro tools/i, 'Avid'],
-  [/image.line/i, 'Image-Line'],
-  [/fl studio/i, 'Image-Line'],
   [/cockos/i, 'Cockos'],
   [/reaper/i, 'Cockos'],
   [/presonus/i, 'PreSonus'],
@@ -204,12 +194,9 @@ const VENDOR_KEYWORDS: [RegExp, string][] = [
   [/ssl/i, 'SSL'],
   [/brainworx/i, 'Brainworx'],
   [/^bx_/i, 'Brainworx'],
-  [/plugin.alliance/i, 'Plugin Alliance'],
-  [/maag/i, 'Maag Audio'],
-  [/neve/i, 'Neve'],
-  [/api/i, 'API'],
-  [/elysia/i, 'Elysia'],
-  [/shadow.hills/i, 'Shadow Hills'],
+  [/maag/i, 'Waves'],
+  [/neve/i, 'Waves'],
+  [/api/i, 'Waves'],
   [/tokyo.dawn/i, 'Tokyo Dawn Records'],
   [/valhalla/i, 'Valhalla DSP'],
   [/eventide/i, 'Eventide'],
@@ -217,12 +204,9 @@ const VENDOR_KEYWORDS: [RegExp, string][] = [
   [/timefactor/i, 'Eventide'],
   [/melda/i, 'Melda Production'],
   [/u.he/i, 'u-he'],
-  [/viola/i, 'Viola'],
   [/korg/i, 'Korg'],
   [/roland/i, 'Roland'],
   [/yamaha/i, 'YAMAHA'],
-  [/air/i, 'Air'],
-  [/audacity/i, 'Audacity'],
 ];
 
 export function extractVendorFromPluginName(name: string): string {
@@ -241,7 +225,7 @@ const APP_NAMES_TO_EXCLUDE_FROM_PLUGINS = new Set([
   'melodyne', 'auto-tune', 'scaler', 'waves central',
   'pro-q', 'softube', 'line 6', 'helix',
   'neural dsp', 'positive grid', 'bias fx', 'overloud',
-  'apogee', 'rme', 'focusrite', 'ilok license manager',
+  'ilok license manager', 'axe i/o',
 ]);
 
 async function scanPluginsForType(
@@ -311,20 +295,20 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
         detectedAt: Date.now(),
       };
     }
-  }
-
-  const searchPath = await searchAppInApplications(config.searchKeywords);
-  if (searchPath && fs.existsSync(searchPath)) {
-    const version = await getAppVersionMac(searchPath);
-    return {
-      name: config.name,
-      path: searchPath,
-      version,
-      type: 'auxiliary',
-      category,
-      vendor: config.vendor,
-      detectedAt: Date.now(),
-    };
+    
+    const searchPath = await searchAppInApplications([appName]);
+    if (searchPath && fs.existsSync(searchPath)) {
+      const version = await getAppVersionMac(searchPath);
+      return {
+        name: config.name,
+        path: searchPath,
+        version,
+        type: 'auxiliary',
+        category,
+        vendor: config.vendor,
+        detectedAt: Date.now(),
+      };
+    }
   }
   
   return null;
