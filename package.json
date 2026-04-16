@@ -13,7 +13,7 @@
     "lint": "next lint",
     "electron": "electron .",
     "electron:dev": "npm run build:all && concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:build": "next build && npm run build:all && electron-builder",
+    "electron:build": "next build && npm run build:all && electron-builder --publish never",
     "test": "jest",
     "test:watch": "jest --watch",
     "release": "node scripts/release.mjs"
