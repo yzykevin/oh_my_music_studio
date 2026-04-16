@@ -4,40 +4,43 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build and upload
+        required: true
+        type: string
 
-env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+permissions:
+  contents: write
 
 jobs:
-  # Step 1: Create a draft GitHub Release
   create-release:
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create.outputs.upload_url }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create draft release
-        id: create
-        run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          TITLE="OMS $TAG"
-          gh release create "$TAG" \
-            --title "$TITLE" \
-            --draft \
-            --generate-notes
+      - name: Ensure draft release exists
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
+          TITLE="OMS ${TAG}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists"
+          else
+            gh release create "$TAG" --title "$TITLE" --draft --generate-notes
+          fi
 
-  # Step 2: Build macOS DMG
   build-macos:
     needs: create-release
     runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,34 +48,28 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install deps
+      - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build macOS app
         run: npm run electron:build
+
+      - name: Upload DMG to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
+          FILE=$(ls release/*.dmg | head -1)
+          gh release upload "$TAG" "$FILE" --clobber
 
-      - name: Find DMG
-        id: dmg
-        shell: bash
-        run: echo "file=$(ls release/*.dmg | head -1)" >> $GITHUB_OUTPUT
-
-      - name: Upload DMG
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ${{ steps.dmg.outputs.file }}
-          asset_name: ${{ steps.dmg.outputs.file }}
-          asset_content_type: application/x-apple-diskimage
-
-  # Step 3: Build Windows NSIS installer
   build-windows:
     needs: create-release
     runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -80,23 +77,17 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install deps
+      - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build Windows app
         run: npm run electron:build
+
+      - name: Upload EXE to release
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Find EXE
-        id: exe
-        shell: bash
-        run: echo "file=$(ls release/*.exe | head -1)" >> $GITHUB_OUTPUT
-
-      - name: Upload EXE
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ${{ steps.exe.outputs.file }}
-          asset_name: ${{ steps.exe.outputs.file }}
-          asset_content_type: application/octet-stream
+        run: |
+          TAG="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
+          FILE=$(ls release/*.exe | head -1)
+          gh release upload "$TAG" "$FILE" --clobber

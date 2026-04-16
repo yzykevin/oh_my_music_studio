@@ -40,10 +40,10 @@ function run(cmd, opts = {}) {
     cwd,
     stdio: silent ? 'pipe' : 'inherit',
     shell: true,
-    encoding: 'utf-8',
+      encoding: 'utf-8',
   });
-  if (result.status !== 0 && result.error) {
-    throw new Error(`Command failed: ${cmd}\n${result.stderr}`);
+  if (result.status !== 0) {
+    throw new Error(`Command failed (${result.status}): ${cmd}\n${result.stderr ?? result.stdout ?? ''}`);
   }
   return result;
 }
@@ -174,7 +174,7 @@ run(`git push origin HEAD`);
 log('4/7', green('✓') + ` Pushed`);
 
 // ─── Get commit SHA for release ────────────────────────────────────────────────
-const sha = run('git rev-parse --short HEAD', { silent: true }).stdout?.trim() ?? '';
+const sha = run('git rev-parse HEAD', { silent: true }).stdout?.trim() ?? '';
 
 // ─── Create GitHub Release ──────────────────────────────────────────────────────
 log('5/7', bold('Creating GitHub Release...'));
@@ -189,19 +189,31 @@ const releaseTitle = `OMS v${VERSION}`;
 let releaseId = '';
 try {
   // Check if release already exists
-  const existing = run(`gh release view ${TAG} --json id --jq .id`, { silent: true });
-  if (existing.stdout?.trim()) {
-    releaseId = existing.stdout.trim();
+  let existingId = '';
+  try {
+    const existing = run(`gh release view ${TAG} --json id --jq .id`, { silent: true });
+    existingId = existing.stdout?.trim() ?? '';
+  } catch {
+    existingId = '';
+  }
+
+  if (existingId) {
+    releaseId = existingId;
     log('5/7', green('✓') + ` Release ${TAG} already exists`);
   } else {
     // Write release body to temp file to avoid JSON escaping issues
     const bodyPath = join(ROOT, '.release-body.tmp');
     writeFileSync(bodyPath, releaseBody, 'utf-8');
 
-    run(`gh release create ${TAG} --target ${sha} --title "${releaseTitle}" --notes-file "${bodyPath}" --draft`);
+    run(`gh release create ${TAG} --title "${releaseTitle}" --notes-file "${bodyPath}" --draft`);
 
     const viewResult = run(`gh release view ${TAG} --json id --jq .id`, { silent: true });
     releaseId = viewResult.stdout?.trim() ?? '';
+
+    if (!releaseId) {
+      throw new Error(`Release ${TAG} was not created successfully`);
+    }
+
     log('5/7', green('✓') + ` Draft release created`);
   }
 } catch (e) {
@@ -215,6 +227,9 @@ try {
 log('6/7', bold('Uploading DMG to release...'));
 
 try {
+  if (!releaseId) {
+    throw new Error(`Release ${TAG} does not exist`);
+  }
   const uploadResult = spawnSync('gh', ['release', 'upload', TAG, dmgFile, '--clobber'], {
     cwd: ROOT,
     stdio: 'inherit',
