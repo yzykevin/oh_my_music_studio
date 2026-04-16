@@ -20,6 +20,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
+const BUILD_COMMAND = 'npm run build && npm run build:all && npx electron-builder --publish never';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const dim = (s) => `\x1b[2m${s}\x1b[0m`;
@@ -141,7 +142,7 @@ if (!existsSync(join(ROOT, 'build', 'icon.icns'))) {
 }
 
 run('npm ci', { silent: true });
-const buildResult = run('npm run electron:build');
+const buildResult = run(BUILD_COMMAND);
 
 if (buildResult.status !== 0) {
   console.error(`${red('✖')} Build failed. Check errors above.`);
