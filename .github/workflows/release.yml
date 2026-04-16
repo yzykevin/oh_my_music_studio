@@ -52,7 +52,7 @@ jobs:
         run: npm ci
 
       - name: Build macOS app
-        run: npm run electron:build
+        run: npm run build && npm run build:all && npx electron-builder --publish never
 
       - name: Upload DMG to release
         env:
@@ -81,7 +81,7 @@ jobs:
         run: npm ci
 
       - name: Build Windows app
-        run: npm run electron:build
+        run: npm run build && npm run build:all && npx electron-builder --publish never
 
       - name: Upload EXE to release
         shell: bash
