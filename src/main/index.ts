@@ -53,6 +53,18 @@ async function getSystemInfo() {
 }
 
 let productionServer: http.Server | null = null;
+const productionServerSockets = new Set<import('net').Socket>();
+
+function shutdownProductionServer(): void {
+  if (productionServer) {
+    for (const socket of productionServerSockets) {
+      socket.destroy();
+    }
+    productionServerSockets.clear();
+    productionServer.close();
+    productionServer = null;
+  }
+}
 
 async function startProductionServer(): Promise<string> {
   const appRoot = app.getAppPath();
@@ -114,6 +126,15 @@ async function startProductionServer(): Promise<string> {
     res.end('Not Found');
   });
 
+  server.on('connection', (socket) => {
+    productionServerSockets.add(socket);
+    socket.on('close', () => {
+      productionServerSockets.delete(socket);
+    });
+  });
+
+  productionServer = server;
+
   return new Promise((resolve) => {
     server.listen(0, '127.0.0.1', () => {
       const addr = server.address();
@@ -156,10 +177,7 @@ function createWindow(): void {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
-    if (productionServer) {
-      productionServer.close();
-      productionServer = null;
-    }
+    shutdownProductionServer();
   });
 
   log.info('Main window created successfully');
@@ -256,13 +274,12 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   log.info('All windows closed');
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  app.quit();
 });
 
 app.on('before-quit', () => {
   log.info('Application quitting...');
+  shutdownProductionServer();
 });
 
 process.on('uncaughtException', (error) => {
