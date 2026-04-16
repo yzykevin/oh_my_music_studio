@@ -13,7 +13,7 @@
  *   - Windows: requires cross-compile via GitHub Actions (handled automatically)
  */
 
-import { execSync as exec, spawnSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
@@ -46,6 +46,11 @@ function run(cmd, opts = {}) {
     throw new Error(`Command failed: ${cmd}\n${result.stderr}`);
   }
   return result;
+}
+
+function exec(cmd) {
+  const buf = execSync(cmd, { shell: true });
+  return buf?.toString('utf-8') ?? '';
 }
 
 function runOrWarn(cmd, opts = {}) {
