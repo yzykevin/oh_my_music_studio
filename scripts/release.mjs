@@ -215,11 +215,19 @@ try {
 log('6/7', bold('Uploading DMG to release...'));
 
 try {
-  run(`gh release upload "${TAG}" "${dmgFile}" --clobber`);
+  const uploadResult = spawnSync('gh', ['release', 'upload', TAG, dmgFile, '--clobber'], {
+    cwd: ROOT,
+    stdio: 'inherit',
+    timeout: 600000, // 10 min timeout for 200MB+ file
+  });
+  if (uploadResult.status !== 0) {
+    throw new Error(uploadResult.stderr || 'Upload failed');
+  }
   log('6/7', green('✓') + ` DMG uploaded`);
 } catch (e) {
   console.warn(`${yellow('⚠')} DMG upload failed: ${e.message}`);
-  console.warn(`   Upload manually at: https://github.com/${repo}/releases/edit/${TAG}`);
+  console.warn(`   Manually: gh release upload "${TAG}" "${dmgFile}"`);
+  console.warn(`   Or upload at: https://github.com/${repo}/releases/edit/${TAG}`);
 }
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
