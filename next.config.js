@@ -5,6 +5,6 @@ const nextConfig = {
   },
 };
 
-module.exports = process.env.NODE_ENV === 'production' 
-  ? { ...nextConfig, output: 'export' }
+module.exports = process.env.NODE_ENV === 'production'
+  ? { ...nextConfig, output: 'standalone' }
   : nextConfig;

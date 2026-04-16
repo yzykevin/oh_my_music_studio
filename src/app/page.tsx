@@ -3,6 +3,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import styles from './page.module.css';
 import { translations, type Language, type TranslationKey } from './i18n';
+import { VendorLogo } from './vendor-logos';
+import { HardwarePanel } from './components/HardwarePanel';
+import { SummaryCards } from './components/SummaryCards';
+import { FormatPieChart, VendorBarChart } from './components/Charts';
+import { ExportMenu } from './components/ExportMenu';
+import { useTheme } from './context/ThemeContext';
 
 interface SystemInfo {
   platform: string;
@@ -22,51 +28,6 @@ interface MusicSoftware {
   vendor?: string;
 }
 
-const VENDOR_LOGOS: Record<string, string> = {
-  'IK Multimedia': '🎸',
-  'Native Instruments': '🎹',
-  'iZotope': '💎',
-  'Waves': '🌊',
-  'FabFilter': '🎛️',
-  'Soundtoys': '🎵',
-  'Spectrasonics': '🔮',
-  'Arturia': '⌨️',
-  'Steinberg': '🎹',
-  'Roland': '🥁',
-  'YAMAHA': '🎹',
-  'Korg': '🎛️',
-  'Universal Audio': '🎤',
-  'Apple': '🍎',
-  'Ableton': '🎛️',
-  'Avid': '🎬',
-  'Image-Line': '💠',
-  'Cockos': '🦎',
-  'PreSonus': '🎚️',
-  'Bitwig': '🌊',
-  'Reason Studios': '🎹',
-  'MOTU': '🎵',
-  'Celemony': '🎼',
-  'Antares': '🎤',
-  'Scaler Music': '🎼',
-  'Xfer Records': '💈',
-  'Valhalla DSP': '🏛️',
-  'Eventide': '✨',
-  'SSL': '🔊',
-  'Tokyo Dawn Records': '🌅',
-  'Melda Production': '🎚️',
-  'Tracktion': '🎛️',
-  'Line 6': '🎸',
-  'Neural DSP': '🎸',
-  'Positive Grid': '🎸',
-  'Overloud': '🎸',
-  'Softube': '🔉',
-  'PACE': '🔑',
-  'Apogee': '🎤',
-  'RME': '🔊',
-  'Focusrite': '🔊',
-  'Other': '📦',
-};
-
 const PLUGIN_TYPE_ICONS: Record<string, string> = {
   vst: 'VST',
   vst3: 'VST3',
@@ -83,19 +44,21 @@ const PLUGIN_TYPE_COLORS: Record<string, string> = {
 
 interface PluginWithFormats extends MusicSoftware {
   formats: string[];
-}
-
-function getVendorEmoji(vendor: string): string {
-  return VENDOR_LOGOS[vendor] || '📦';
+  isDuplicate?: boolean;
+  is32Bit?: boolean;
 }
 
 export default function Home() {
+  const { theme, toggleTheme } = useTheme();
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [software, setSoftware] = useState<MusicSoftware[]>([]);
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState('');
   const [lang, setLang] = useState<Language>('en');
   const [expandedVendors, setExpandedVendors] = useState<Set<string>>(new Set());
+  const [hardware, setHardware] = useState<HardwareInfo | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
 
   const t = (key: TranslationKey): string => {
     return translations[lang][key];
@@ -112,6 +75,9 @@ export default function Home() {
 
         const ver = await window.electronAPI.getAppVersion();
         setVersion(ver);
+
+        const hw = await window.electronAPI.scanHardware();
+        setHardware(hw);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -127,7 +93,6 @@ export default function Home() {
   }, []);
 
   const daws = useMemo(() => software.filter(s => s.category === 'daw'), [software]);
-  const auxiliary = useMemo(() => software.filter(s => s.category === 'auxiliary'), [software]);
   const drivers = useMemo(() => software.filter(s => s.category === 'driver'), [software]);
   const ilok = useMemo(() => software.filter(s => s.category === 'ilok'), [software]);
 
@@ -152,6 +117,19 @@ export default function Home() {
     return Object.values(grouped);
   }, [software]);
 
+  const pluginVendors = useMemo(
+    () => new Set(pluginsWithFormats.map(p => p.vendor || 'Other')),
+    [pluginsWithFormats]
+  );
+
+  const auxiliary = useMemo(
+    () =>
+      software.filter(
+        s => s.category === 'auxiliary' && !pluginVendors.has(s.vendor || 'Other')
+      ),
+    [software, pluginVendors]
+  );
+
   const pluginsByVendor = useMemo(() => {
     const grouped: Record<string, PluginWithFormats[]> = {};
     for (const plugin of pluginsWithFormats) {
@@ -165,6 +143,43 @@ export default function Home() {
     }
     return grouped;
   }, [pluginsWithFormats]);
+
+  const formatData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of pluginsWithFormats) {
+      for (const fmt of p.formats) {
+        counts[fmt.toUpperCase()] = (counts[fmt.toUpperCase()] ?? 0) + 1;
+      }
+    }
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [pluginsWithFormats]);
+
+  const vendorData = useMemo(() => {
+    return Object.entries(pluginsByVendor)
+      .map(([vendor, plugins]) => ({ vendor, count: plugins.length }))
+      .sort((a, b) => b.count - a.count);
+  }, [pluginsByVendor]);
+
+  const filteredPluginsByVendor = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    const result: Record<string, PluginWithFormats[]> = {};
+    for (const [vendor, vendorPlugins] of Object.entries(pluginsByVendor)) {
+      const filtered = vendorPlugins.filter(p => {
+        const matchesSearch =
+          !query ||
+          p.name.toLowerCase().includes(query) ||
+          (p.vendor ?? '').toLowerCase().includes(query);
+        const matchesFormat =
+          activeFormats.size === 0 ||
+          p.formats.some(f => activeFormats.has(f.toUpperCase()));
+        return matchesSearch && matchesFormat;
+      });
+      if (filtered.length > 0) {
+        result[vendor] = filtered;
+      }
+    }
+    return result;
+  }, [pluginsByVendor, searchQuery, activeFormats]);
 
   const formatBytes = (bytes: number): string => {
     const gb = bytes / (1024 * 1024 * 1024);
@@ -195,7 +210,7 @@ export default function Home() {
         <div className={styles.dawGrid}>
           {items.map((item, index) => (
             <div key={index} className={styles.dawCard}>
-              <div className={styles.dawIcon}>{getVendorEmoji(item.vendor || 'Other')}</div>
+              <VendorLogo vendor={item.vendor || 'Other'} size={36} />
               <div className={styles.dawInfo}>
                 <span className={styles.dawName}>{item.name}</span>
                 <span className={styles.dawVersion}>v{item.version}</span>
@@ -208,35 +223,41 @@ export default function Home() {
   };
 
   const renderPluginSection = () => {
-    if (Object.keys(pluginsByVendor).length === 0) return null;
+    if (Object.keys(filteredPluginsByVendor).length === 0) return null;
     return (
       <div className={styles.pluginSection}>
         <h3 className={styles.subTitle}>{t('plugins')}</h3>
-        {Object.entries(pluginsByVendor)
+        {Object.entries(filteredPluginsByVendor)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([vendor, vendorPlugins]) => (
             <div key={vendor} className={styles.vendorSection}>
-              <button 
+              <button
                 className={styles.vendorHeader}
                 onClick={() => toggleVendor(vendor)}
               >
-                <span className={styles.vendorIcon}>{getVendorEmoji(vendor)}</span>
+                <VendorLogo vendor={vendor} size={24} />
                 <span className={styles.vendorName}>{vendor}</span>
                 <span className={styles.vendorCount}>{vendorPlugins.length}</span>
                 <span className={styles.expandIcon}>
                   {expandedVendors.has(vendor) ? '▼' : '▶'}
                 </span>
               </button>
-              
+
               {expandedVendors.has(vendor) && (
                 <ul className={styles.pluginList}>
                   {vendorPlugins.map((plugin, idx) => (
                     <li key={idx} className={styles.pluginItem}>
                       <span className={styles.checkmark}>✓</span>
                       <span className={styles.pluginName}>{plugin.name}</span>
+                      {plugin.isDuplicate && (
+                        <span className={styles.riskBadge} title="Duplicate plugin (same bundleIdentifier in multiple paths)">⚠️ Duplicate</span>
+                      )}
+                      {plugin.is32Bit && (
+                        <span className={styles.riskBadge32} title="32-bit plugin — may not work in modern DAWs">⚠️ 32-bit</span>
+                      )}
                       <div className={styles.formatIcons}>
                         {plugin.formats.map(fmt => (
-                          <span 
+                          <span
                             key={fmt}
                             className={styles.formatBadge}
                             style={{ backgroundColor: PLUGIN_TYPE_COLORS[fmt] || '#666' }}
@@ -268,7 +289,18 @@ export default function Home() {
       <header className={styles.header}>
         <h1>{t('appTitle')}</h1>
         <div className={styles.headerRight}>
-          <button 
+          <ExportMenu
+            software={software}
+            hardware={hardware}
+          />
+          <button
+            className={styles.themeButton}
+            onClick={toggleTheme}
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
+          <button
             className={styles.langButton}
             onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
           >
@@ -279,6 +311,12 @@ export default function Home() {
       </header>
 
       <main className={styles.main}>
+        <HardwarePanel
+          hardware={hardware}
+          lang={lang}
+          translations={translations[lang]}
+        />
+
         <section className={styles.section}>
           <h2>{t('systemInfo')}</h2>
           {systemInfo && (
@@ -311,18 +349,18 @@ export default function Home() {
 
         <section className={styles.section}>
           <h2>{t('musicSoftware')}</h2>
-          
+
           {renderDawSection(t('daw'), daws)}
           {renderDawSection(lang === 'zh' ? '辅助工具' : 'Auxiliary', auxiliary)}
           {renderDawSection(lang === 'zh' ? '驱动软件' : 'Drivers', drivers)}
-          
+
           {ilok.length > 0 && (
             <div className={styles.dawSection}>
-              <h3 className={styles.subTitle}>🔑 iLok</h3>
+              <h3 className={styles.subTitle}>iLok</h3>
               <div className={styles.dawGrid}>
                 {ilok.map((item, index) => (
                   <div key={index} className={styles.dawCard}>
-                    <div className={styles.dawIcon}>🔑</div>
+                    <VendorLogo vendor="PACE" size={36} />
                     <div className={styles.dawInfo}>
                       <span className={styles.dawName}>{item.name}</span>
                       <span className={styles.dawVersion}>{item.version}</span>
@@ -331,6 +369,53 @@ export default function Home() {
                 ))}
               </div>
             </div>
+          )}
+
+          {pluginsWithFormats.length > 0 && (
+            <>
+              <div className={styles.dawSection}>
+                <SummaryCards
+                  totalPlugins={pluginsWithFormats.length}
+                  totalVendors={Object.keys(pluginsByVendor).length}
+                  totalDAWs={daws.length}
+                  totalAudioDevices={hardware?.audioDevices?.length ?? 0}
+                  lang={lang}
+                />
+              </div>
+
+              {(formatData.length > 0 || vendorData.length > 0) && (
+                <div className={styles.chartsRow}>
+                  <FormatPieChart data={formatData} lang={lang} />
+                  <VendorBarChart data={vendorData} lang={lang} />
+                </div>
+              )}
+
+              <div className={styles.pluginControls}>
+                <input
+                  type="text"
+                  placeholder={lang === 'zh' ? '搜索插件…' : 'Search plugins...'}
+                  className={styles.searchInput}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+                <div className={styles.formatFilters}>
+                  {['VST', 'VST3', 'AU', 'AAX'].map(fmt => (
+                    <button
+                      key={fmt}
+                      className={`${styles.formatChip} ${activeFormats.has(fmt) ? styles.formatChipActive : ''}`}
+                      onClick={() => {
+                        const next = new Set(activeFormats);
+                        if (next.has(fmt)) next.delete(fmt);
+                        else next.add(fmt);
+                        setActiveFormats(next);
+                      }}
+                    >
+                      {fmt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
 
           {renderPluginSection()}
@@ -344,13 +429,56 @@ export default function Home() {
   );
 }
 
-declare global {
-  interface Window {
-    electronAPI: {
-      getSystemInfo: () => Promise<SystemInfo>;
-      scanSoftware: () => Promise<MusicSoftware[]>;
-      getAppVersion: () => Promise<string>;
-      onSoftwareUpdate: (callback: (software: MusicSoftware[]) => void) => void;
-    };
+  interface AudioDevice {
+    name: string;
+    manufacturer: string;
+    inputChannels: number;
+    outputChannels: number;
+    sampleRate: number;
+    transport: string;
+    isDefaultInput: boolean;
+    isDefaultOutput: boolean;
+    isSystemOutput: boolean;
   }
+
+  interface MidiDevice {
+    name: string;
+    manufacturer: string;
+    type: string;
+    connected: boolean;
+  }
+
+  interface BluetoothAudioDevice {
+    name: string;
+    address: string;
+    minorType: string;
+    vendorId: string;
+    productId: string;
+    firmwareVersion: string;
+    leftBattery?: number;
+    rightBattery?: number;
+    supportsA2DP: boolean;
+  }
+
+  interface HardwareInfo {
+    audioDevices: AudioDevice[];
+    midiDevices: MidiDevice[];
+    runningDAWs: string[];
+    loginItems: string[];
+    bluetoothAudio: BluetoothAudioDevice[];
+  }
+
+  declare global {
+    interface Window {
+      electronAPI: {
+        getSystemInfo: () => Promise<SystemInfo>;
+        scanSoftware: () => Promise<MusicSoftware[]>;
+        getAppVersion: () => Promise<string>;
+        scanHardware: () => Promise<HardwareInfo>;
+        showSaveDialog: (opts: { defaultPath: string; filters: Array<{ name: string; extensions: string[] }> }) => Promise<string | null>;
+        writeFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
+        writePdfFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
+        onSoftwareUpdate: (callback: (software: MusicSoftware[]) => void) => void;
+      };
+    }
 }

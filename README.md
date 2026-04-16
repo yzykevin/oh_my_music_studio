@@ -1,4 +1,4 @@
-# Oh My Music Studio
+# OMS (Oh My Music Studio)
 
 一个桌面应用程序，用于分析本地音乐制作工具、系统信息，并通过 Web 前端实时展示。
 

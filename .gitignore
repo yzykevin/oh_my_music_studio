@@ -9,7 +9,14 @@ coverage/
 # Next.js
 .next/
 out/
-build/
+
+# Build (except icons - these are committed)
+build/*.mjs
+build/*.ts
+build/*.js
+!build/icon.icns
+!build/icon.png
+build/icon.iconset/
 
 # Production
 dist/
@@ -21,6 +28,7 @@ release/
 
 # Misc
 .DS_Store
+.release-body.tmp
 *.pem
 
 # Debug

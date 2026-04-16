@@ -1,10 +1,13 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import * as http from 'http';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import log from 'electron-log';
 import { scanMusicSoftware, type MusicSoftware } from './services/software-detector';
+import { detectAllHardware } from './services/audio-detector';
 
 const execAsync = promisify(exec);
 
@@ -49,6 +52,82 @@ async function getSystemInfo() {
   };
 }
 
+let productionServer: http.Server | null = null;
+
+async function startProductionServer(): Promise<string> {
+  const appRoot = app.getAppPath();
+  const htmlPath = path.join(appRoot, '.next', 'standalone', '.next', 'server', 'app', 'index.html');
+  const staticBase = path.join(appRoot, '.next', 'static');
+
+  let indexHtml = '';
+  try {
+    if (fs.existsSync(htmlPath)) {
+      indexHtml = fs.readFileSync(htmlPath, 'utf-8');
+    }
+  } catch (err) {
+    log.error('Failed to read index.html:', err);
+  }
+
+  const server = http.createServer((req, res) => {
+    const urlPath = req.url ?? '/';
+
+    if (urlPath === '/') {
+      if (indexHtml) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(indexHtml);
+      } else {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('<!DOCTYPE html><html><head><title>Oh My Music Studio</title></head><body><div id="__next"></div></body></html>');
+      }
+      return;
+    }
+
+    if (urlPath.startsWith('/_next/static/')) {
+      const relativePath = urlPath.replace('/_next/static/', '');
+      const filePath = path.join(staticBase, relativePath);
+
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        const ext = path.extname(filePath).toLowerCase();
+        const mimeTypes: Record<string, string> = {
+          '.js': 'application/javascript',
+          '.mjs': 'application/javascript',
+          '.css': 'text/css',
+          '.json': 'application/json',
+          '.png': 'image/png',
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.svg': 'image/svg+xml',
+          '.ico': 'image/x-icon',
+          '.woff': 'font/woff',
+          '.woff2': 'font/woff2',
+          '.txt': 'text/plain',
+        };
+        const mimeType = mimeTypes[ext] ?? 'application/octet-stream';
+        const content = fs.readFileSync(filePath);
+        res.writeHead(200, { 'Content-Type': mimeType, 'Cache-Control': 'public, max-age=31536000, immutable' });
+        res.end(content);
+        return;
+      }
+    }
+
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
+  });
+
+  return new Promise((resolve) => {
+    server.listen(0, '127.0.0.1', () => {
+      const addr = server.address();
+      if (addr && typeof addr === 'object') {
+        const url = `http://127.0.0.1:${addr.port}`;
+        log.info(`Production server listening on ${url}`);
+        resolve(url);
+      } else {
+        resolve('http://127.0.0.1:3000');
+      }
+    });
+  });
+}
+
 function createWindow(): void {
   log.info('Creating main window...');
 
@@ -60,18 +139,27 @@ function createWindow(): void {
       contextIsolation: true,
       preload: path.join(__dirname, '../preload/index.js'),
     },
-    title: 'Oh My Music Studio',
+    title: 'OMS',
   });
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    startProductionServer().then((url) => {
+      log.info(`Loading production URL: ${url}`);
+      mainWindow?.loadURL(url);
+    }).catch((err) => {
+      log.error('Failed to start production server:', err);
+    });
   }
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    if (productionServer) {
+      productionServer.close();
+      productionServer = null;
+    }
   });
 
   log.info('Main window created successfully');
@@ -101,6 +189,58 @@ ipcMain.handle('software:scan', async () => {
 
 ipcMain.handle('app:version', () => {
   return app.getVersion();
+});
+
+ipcMain.handle('hardware:scan', async () => {
+  log.info('Scanning for hardware...');
+  try {
+    return await detectAllHardware();
+  } catch (error) {
+    log.error('Failed to scan hardware:', error);
+    return {
+      audioDevices: [],
+      midiDevices: [],
+      runningDAWs: [],
+      loginItems: [],
+      bluetoothAudio: [],
+    };
+  }
+});
+
+ipcMain.handle('export:save-json', async (_event, { filePath, content }: { filePath: string; content: string }) => {
+  try {
+    fs.writeFileSync(filePath, content, 'utf-8');
+    return { success: true };
+  } catch (error) {
+    log.error('Failed to write JSON file:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('export:save-pdf', async (_event, { filePath, content }: { filePath: string; content: string }) => {
+  try {
+    const buffer = Buffer.from(content, 'base64');
+    fs.writeFileSync(filePath, buffer);
+    return { success: true };
+  } catch (error) {
+    log.error('Failed to write PDF file:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('dialog:show-save', async (_event, {
+  defaultPath,
+  filters,
+}: {
+  defaultPath: string;
+  filters: Array<{ name: string; extensions: string[] }>;
+}) => {
+  const result = await dialog.showSaveDialog({
+    title: 'Export Report',
+    defaultPath,
+    filters,
+  });
+  return result.canceled ? null : result.filePath;
 });
 
 app.whenReady().then(() => {

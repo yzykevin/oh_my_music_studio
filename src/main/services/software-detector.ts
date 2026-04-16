@@ -13,6 +13,15 @@ export interface MusicSoftware {
   category: 'daw' | 'plugin' | 'auxiliary' | 'driver' | 'ilok';
   vendor?: string;
   detectedAt: number;
+  bundleIdentifier?: string;
+  bundleVersion?: string;
+  bundleShortVersion?: string;
+  architectures: string[];
+  is64Bit: boolean;
+  is32Bit: boolean;
+  isDuplicate: boolean;
+  duplicatePaths?: string[];
+  isOrphaned: boolean;
 }
 
 interface SoftwareConfig {
@@ -70,7 +79,7 @@ async function searchAppInApplications(keywords: string[]): Promise<string | nul
       for (const file of files) {
         if (!file.endsWith('.app')) continue;
         const fileLower = file.toLowerCase();
-        const matches = keywords.every(keyword => 
+        const matches = keywords.every(keyword =>
           keyword.length <= 2 || fileLower.includes(keyword.toLowerCase())
         );
         if (matches) {
@@ -98,6 +107,7 @@ const MAC_DAW_CONFIGS: SoftwareConfig[] = [
 ];
 
 const MAC_AUXILIARY_CONFIGS: SoftwareConfig[] = [
+  { name: 'Plugin Alliance', searchKeywords: ['plugin alliance'], type: 'daw', vendor: 'Plugin Alliance' },
   { name: 'AmpliTube', searchKeywords: ['amplitube'], type: 'daw', vendor: 'IK Multimedia' },
   { name: 'TONEX', searchKeywords: ['tonex'], type: 'daw', vendor: 'IK Multimedia' },
   { name: 'SampleTank', searchKeywords: ['sampletank'], type: 'daw', vendor: 'IK Multimedia' },
@@ -136,14 +146,98 @@ const MAC_PLUGIN_PATHS = {
   aax: ['/Library/Application Support/Avid/Audio/Plug-ins', '~/Library/Application Support/Avid/Audio/Plug-ins'],
 };
 
+const BUNDLE_ID_VENDOR_MAP: [string, string][] = [
+  ['com.plugin-alliance', 'Plugin Alliance'],
+  ['com.softube', 'Softube'],
+  ['com.ikmultimedia', 'IK Multimedia'],
+  ['com.uaudio', 'Universal Audio'],
+  ['com.izotope', 'iZotope'],
+  ['com.fabfilter', 'FabFilter'],
+  ['com.native-instruments', 'Native Instruments'],
+  ['com.celemony', 'Celemony'],
+  ['com.soundtoys', 'Soundtoys'],
+  ['com.arturia', 'Arturia'],
+  ['com.avid', 'Avid'],
+  ['com.steinberg', 'Steinberg'],
+  ['com.ableton', 'Ableton'],
+  ['com.cockos', 'Cockos'],
+  ['com.presonus', 'PreSonus'],
+  ['com.bitwig', 'Bitwig'],
+  ['com.reason Studios', 'Reason Studios'],
+  ['com.motu', 'MOTU'],
+  ['com.spectrasonics', 'Spectrasonics'],
+  ['com.valhalla', 'Valhalla DSP'],
+  ['com.eventide', 'Eventide'],
+  ['com.u-he', 'u-he'],
+  ['com.meldaproduction', 'Melda Production'],
+  ['com.korg', 'Korg'],
+  ['com.roland', 'Roland'],
+  ['com.yamaha', 'YAMAHA'],
+  ['com.pulsar', 'Pulsar Audio'],
+  ['com.apogee', 'Apogee'],
+  ['com.rme', 'RME'],
+  ['com.focusrite', 'Focusrite'],
+  ['com.ssl', 'SSL'],
+  ['com.valhalladsp', 'Valhalla DSP'],
+  ['com.waves', 'Waves'],
+  ['com.brainworx', 'Brainworx'],
+  ['com.melda', 'Melda Production'],
+  ['com.positivegrid', 'Positive Grid'],
+  ['com.overloud', 'Overloud'],
+  ['com.antares', 'Antares'],
+  ['com.line6', 'Line 6'],
+  ['com.neuraldsp', 'Neural DSP'],
+  ['com.ablaze', 'Ablaze Audio'],
+  ['com.refx', 'reFX'],
+  ['com.sonible', 'sonible'],
+  ['com.scalermusic', 'Scaler Music'],
+  ['audio.pulsar', 'Pulsar Audio'],
+];
+
+const AU_MANUFACTURER_CODE_MAP: Record<string, string> = {
+  'FabF': 'FabFilter',
+  'PTul': 'Pulsar Audio',
+  'Ik': 'IK Multimedia',
+  'iZot': 'iZotope',
+  'SSTg': 'Soundtoys',
+  'Artu': 'Arturia',
+  'AVID': 'Avid',
+  'Stei': 'Steinberg',
+  'Abel': 'Ableton',
+  'Cock': 'Cockos',
+  'Pres': 'PreSonus',
+  'Bitw': 'Bitwig',
+  'NI': 'Native Instruments',
+  'Celm': 'Celemony',
+  'Antx': 'Antares',
+  'Scal': 'Scaler Music',
+  'Vlhv': 'Valhalla DSP',
+  'Evnt': 'Eventide',
+  'UHe': 'u-he',
+  'Melda': 'Melda Production',
+  'Korg': 'Korg',
+  'Roln': 'Roland',
+  'Yamaha': 'YAMAHA',
+  'SSL ': 'SSL',
+};
+
 const VENDOR_KEYWORDS: [RegExp, string][] = [
   [/amplitube/i, 'IK Multimedia'],
   [/tonex/i, 'IK Multimedia'],
   [/sampletank/i, 'IK Multimedia'],
-  [/arc/i, 'IK Multimedia'],
+  [/\b(arc x|arc\s*\d)\b/i, 'IK Multimedia'],
   [/synergy/i, 'IK Multimedia'],
+  [/tr5 /i, 'IK Multimedia'],
+  [/t-racks/i, 'IK Multimedia'],
+  [/t.racks/i, 'IK Multimedia'],
+  [/miro/i, 'IK Multimedia'],
+  [/pianoverse/i, 'IK Multimedia'],
+  [/modo bass/i, 'IK Multimedia'],
+  [/modo drum/i, 'IK Multimedia'],
+  [/sampletron/i, 'IK Multimedia'],
   [/native instruments/i, 'Native Instruments'],
   [/kontakt/i, 'Native Instruments'],
+  [/pulsar/i, 'Pulsar Audio'],
   [/massive/i, 'Native Instruments'],
   [/reaktor/i, 'Native Instruments'],
   [/guitar rig/i, 'Native Instruments'],
@@ -152,11 +246,37 @@ const VENDOR_KEYWORDS: [RegExp, string][] = [
   [/neutron/i, 'iZotope'],
   [/^rx\b/i, 'iZotope'],
   [/nectar/i, 'iZotope'],
+  [/stutter/i, 'iZotope'],
+  [/rx elements/i, 'iZotope'],
+  [/vocaldoubler/i, 'iZotope'],
+  [/plugin alliance/i, 'Plugin Alliance'],
+  [/slate/i, 'Plugin Alliance'],
+  [/sonnox/i, 'Plugin Alliance'],
+  [/psp Audioware/i, 'Plugin Alliance'],
+  [/psp.?iware\b/i, 'Plugin Alliance'],
+  [/brainworx/i, 'Plugin Alliance'],
+  [/^\s*bx_/i, 'Plugin Alliance'],
+  [/black.?box.?analog/i, 'Plugin Alliance'],
+  [/elysia/i, 'Plugin Alliance'],
+  [/maag/i, 'Plugin Alliance'],
+  [/neve/i, 'Plugin Alliance'],
+  [/waves api/i, 'Waves'],
+  [/\bapi\b/i, 'Plugin Alliance'],
   [/waves/i, 'Waves'],
+  [/c6/i, 'Waves'],
   [/fabfilter/i, 'FabFilter'],
   [/pro.q/i, 'FabFilter'],
   [/softube/i, 'Softube'],
-  [/\s+v\d+$/, 'Softube'],
+  [/fix/i, 'Softube'],
+  [/console.?1/i, 'Softube'],
+  [/tube.tech/i, 'Softube'],
+  [/tube.delay/i, 'Softube'],
+  [/saturation knob/i, 'Softube'],
+  [/transient shaper/i, 'Softube'],
+  [/tsar/i, 'Softube'],
+  [/drawmer/i, 'Softube'],
+  [/vca compressor/i, 'Softube'],
+  [/wasted.?space/i, 'Softube'],
   [/soundtoys/i, 'Soundtoys'],
   [/spectrasonics/i, 'Spectrasonics'],
   [/omnisphere/i, 'Spectrasonics'],
@@ -164,7 +284,13 @@ const VENDOR_KEYWORDS: [RegExp, string][] = [
   [/arturia/i, 'Arturia'],
   [/pigments/i, 'Arturia'],
   [/universal audio/i, 'Universal Audio'],
-  [/uad\b/i, 'Universal Audio'],
+  [/uad\./i, 'Universal Audio'],
+  [/ua_1176/i, 'Universal Audio'],
+  [/ua.?1176/i, 'Universal Audio'],
+  [/1176/i, 'Universal Audio'],
+  [/ua_610/i, 'Universal Audio'],
+  [/la.?2a/i, 'Universal Audio'],
+  [/pultec/i, 'Universal Audio'],
   [/steinberg/i, 'Steinberg'],
   [/cubase/i, 'Steinberg'],
   [/ableton/i, 'Ableton'],
@@ -192,11 +318,10 @@ const VENDOR_KEYWORDS: [RegExp, string][] = [
   [/rme/i, 'RME'],
   [/focusrite/i, 'Focusrite'],
   [/ssl/i, 'SSL'],
-  [/brainworx/i, 'Brainworx'],
-  [/^bx_/i, 'Brainworx'],
-  [/maag/i, 'Waves'],
-  [/neve/i, 'Waves'],
-  [/api/i, 'Waves'],
+  [/ablaze/i, 'Ablaze Audio'],
+  [/nexus/i, 'reFX'],
+  [/smartcomp/i, 'sonible'],
+  [/smarteq/i, 'sonible'],
   [/tokyo.dawn/i, 'Tokyo Dawn Records'],
   [/valhalla/i, 'Valhalla DSP'],
   [/eventide/i, 'Eventide'],
@@ -218,6 +343,78 @@ export function extractVendorFromPluginName(name: string): string {
   return 'Other';
 }
 
+function extractVendorFromBundleId(bundleId: string): string | null {
+  for (const [prefix, vendor] of BUNDLE_ID_VENDOR_MAP) {
+    if (bundleId.startsWith(prefix + '.') || bundleId === prefix) {
+      return vendor;
+    }
+  }
+  return null;
+}
+
+async function readPlistKey(plistPath: string, key: string): Promise<string | null> {
+  try {
+    const { stdout } = await execAsync(
+      `defaults read "${plistPath}" "${key}" 2>/dev/null`
+    );
+    const result = stdout.trim();
+    return result || null;
+  } catch {
+    return null;
+  }
+}
+
+type Architecture = 'x86_64' | 'arm64' | 'i386' | 'armv7' | 'universal' | 'unknown';
+
+async function getPluginArchitectures(bundlePath: string): Promise<Architecture[]> {
+  const macOSDir = path.join(bundlePath, 'Contents/MacOS');
+  if (!fs.existsSync(macOSDir)) return [];
+  try {
+    const files = fs.readdirSync(macOSDir);
+    const binary = files.find(f => !f.startsWith('.'));
+    if (!binary) return [];
+    const { stdout } = await execAsync(`file -b "${path.join(macOSDir, binary)}" 2>/dev/null`);
+    const arches: Architecture[] = [];
+    if (/x86_64/.test(stdout)) arches.push('x86_64');
+    if (/arm64|aarch64/.test(stdout)) arches.push('arm64');
+    if (/i386|i486|i686/.test(stdout)) arches.push('i386');
+    if (/armv7/.test(stdout)) arches.push('armv7');
+    if (/universal/.test(stdout)) arches.push('universal');
+    return arches.length > 0 ? arches : ['unknown'];
+  } catch {
+    return [];
+  }
+}
+
+async function getVendorFromAaxBundle(bundlePath: string): Promise<string | null> {
+  const plistPath = path.join(bundlePath, 'Contents/Info.plist');
+  if (!fs.existsSync(plistPath)) return null;
+
+  const bundleId = await readPlistKey(plistPath, 'CFBundleIdentifier');
+  if (!bundleId) return null;
+
+  return extractVendorFromBundleId(bundleId);
+}
+
+async function getVendorFromAuComponent(componentPath: string): Promise<string | null> {
+  const plistPath = path.join(componentPath, 'Contents/Info.plist');
+  if (!fs.existsSync(plistPath)) return null;
+
+  const bundleId = await readPlistKey(plistPath, 'CFBundleIdentifier');
+  if (bundleId) {
+    const fromBundle = extractVendorFromBundleId(bundleId);
+    if (fromBundle) return fromBundle;
+  }
+
+  const manufacturer = await readPlistKey(plistPath, 'manufacturer');
+  if (manufacturer) {
+    const code = manufacturer.trim();
+    return AU_MANUFACTURER_CODE_MAP[code] || null;
+  }
+
+  return null;
+}
+
 const APP_NAMES_TO_EXCLUDE_FROM_PLUGINS = new Set([
   'amplitube', 'tonex', 'sampletank', 'arc', 'synergy',
   'guitar rig', 'kontakt', 'massive', 'reaktor',
@@ -226,6 +423,17 @@ const APP_NAMES_TO_EXCLUDE_FROM_PLUGINS = new Set([
   'pro-q', 'softube', 'line 6', 'helix',
   'neural dsp', 'positive grid', 'bias fx', 'overloud',
   'ilok license manager', 'axe i/o',
+  'appleaes3audio',
+  'izone12auhook', 'izrx11breathcontrolauhook', 'izrx11connectauhook',
+  'izrx11declickauhook', 'izrx11declipauhook', 'izrx11decrackleauhook',
+  'izrx11dessauhook', 'izrx11dehumauhook', 'izrx11deplosiveauhook',
+  'izrx11dereverbauhook', 'izrx11dialogueisolateauhook',
+  'izrx11gtrdnoiseauhook', 'izrx11monitorauhook', 'izrx11mouthdeclickauhook',
+  'izrx11musicsrebalancearauhook', 'izrx11repairassistantauhook',
+  'izrx11spectraldenoiseauhook', 'izrx11voicedenoiseauhook',
+  'izrx11core',
+  'scaler 3 audio', 'scaler 3 control', 'scaler 3',
+  'scaler detector audio', 'scaler detector control', 'scaler detector',
 ]);
 
 async function scanPluginsForType(
@@ -247,28 +455,69 @@ async function scanPluginsForType(
         const isComponent = entry.name.endsWith('.component');
         const isDll = entry.name.endsWith('.dll');
 
-        if (isDir || isVst3 || isComponent || isDll) {
+        const isAax = /\.aaxplugin$/i.test(entry.name);
+        const isBundle = /\.bundle$/i.test(entry.name);
+
+        if (isDir || isVst3 || isComponent || isDll || isAax || isBundle) {
           const cleanName = entry.name
             .replace(/\.vst3$/i, '')
+            .replace(/\.aaxplugin$/i, '')
+            .replace(/\.bundle$/i, '')
             .replace(/\.component$/i, '')
             .replace(/\.dll$/i, '')
             .replace(/\s+v\d+$/i, '')
             .trim();
 
           const lowerName = cleanName.toLowerCase();
-          
+
           if (APP_NAMES_TO_EXCLUDE_FROM_PLUGINS.has(lowerName)) {
             continue;
           }
 
+          let vendor: string | null = null;
+
+          if ((isVst3 || isAax || isBundle) && isDir) {
+            vendor = await getVendorFromAaxBundle(fullPath);
+          } else if (isComponent) {
+            vendor = await getVendorFromAuComponent(fullPath);
+          }
+
+          if (!vendor) {
+            vendor = extractVendorFromPluginName(cleanName);
+          }
+
+          if (vendor === 'Apple') {
+            continue;
+          }
+
+          let version = 'installed';
+          let bundleIdentifier: string | undefined;
+          const plistPath = path.join(fullPath, 'Contents/Info.plist');
+          if (fs.existsSync(plistPath)) {
+            const ver = await readPlistKey(plistPath, 'CFBundleShortVersionString');
+            if (ver) version = ver;
+            const bid = await readPlistKey(plistPath, 'CFBundleIdentifier');
+            if (bid) bundleIdentifier = bid;
+          }
+
+          const archs = await getPluginArchitectures(fullPath);
+          const is64Bit = archs.includes('x86_64') || archs.includes('arm64');
+          const is32Bit = archs.includes('i386') || archs.includes('armv7');
+
           plugins.push({
             name: cleanName,
             path: fullPath,
-            version: 'installed',
+            version,
+            bundleIdentifier,
             type: type as 'vst' | 'vst3' | 'au' | 'aax',
             category: 'plugin',
-            vendor: extractVendorFromPluginName(cleanName),
+            vendor,
             detectedAt: Date.now(),
+            architectures: archs,
+            is64Bit,
+            is32Bit,
+            isDuplicate: false,
+            isOrphaned: false,
           });
         }
       }
@@ -293,9 +542,14 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
         category,
         vendor: config.vendor,
         detectedAt: Date.now(),
+        architectures: [],
+        is64Bit: false,
+        is32Bit: false,
+        isDuplicate: false,
+        isOrphaned: false,
       };
     }
-    
+
     const searchPath = await searchAppInApplications([appName]);
     if (searchPath && fs.existsSync(searchPath)) {
       const version = await getAppVersionMac(searchPath);
@@ -307,10 +561,15 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
         category,
         vendor: config.vendor,
         detectedAt: Date.now(),
+        architectures: [],
+        is64Bit: false,
+        is32Bit: false,
+        isDuplicate: false,
+        isOrphaned: false,
       };
     }
   }
-  
+
   return null;
 }
 
@@ -343,6 +602,11 @@ export async function scanMusicSoftware(): Promise<MusicSoftware[]> {
         category: 'ilok',
         vendor: 'PACE',
         detectedAt: Date.now(),
+        architectures: [],
+        is64Bit: false,
+        is32Bit: false,
+        isDuplicate: false,
+        isOrphaned: false,
       });
     }
 
@@ -352,6 +616,34 @@ export async function scanMusicSoftware(): Promise<MusicSoftware[]> {
         paths as string[]
       );
       results.push(...plugins);
+    }
+
+    const bundleIdGroups: Record<string, MusicSoftware[]> = {};
+    for (const p of results) {
+      if (p.bundleIdentifier) {
+        (bundleIdGroups[p.bundleIdentifier] ??= []).push(p);
+      }
+    }
+    for (const p of results) {
+      const group = bundleIdGroups[p.bundleIdentifier ?? ''];
+      if (group && group.length > 1) {
+        p.isDuplicate = true;
+        p.duplicatePaths = group.map(g => g.path);
+      } else {
+        p.isDuplicate = false;
+        p.duplicatePaths = undefined;
+      }
+    }
+
+    const dawVendors = new Set(
+      results.filter(r => r.type === 'daw').map(r => r.vendor).filter(Boolean)
+    );
+    for (const p of results) {
+      if (p.category === 'plugin' && p.vendor) {
+        p.isOrphaned = !dawVendors.has(p.vendor);
+      } else {
+        p.isOrphaned = false;
+      }
     }
   }
 

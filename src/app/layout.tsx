@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { ThemeInit } from './components/ThemeInit';
+import { ThemeProvider } from './context/ThemeContext';
 
 export const metadata: Metadata = {
-  title: 'Oh My Music Studio',
+  title: 'OMS',
   description: 'Analyze local music production tools and system information',
 };
 
@@ -13,7 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ThemeInit />
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

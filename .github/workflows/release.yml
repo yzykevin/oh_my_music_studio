@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  # Step 1: Create a draft GitHub Release
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create.outputs.upload_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create draft release
+        id: create
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          TITLE="OMS $TAG"
+          gh release create "$TAG" \
+            --title "$TITLE" \
+            --draft \
+            --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Step 2: Build macOS DMG
+  build-macos:
+    needs: create-release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run electron:build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find DMG
+        id: dmg
+        shell: bash
+        run: echo "file=$(ls release/*.dmg | head -1)" >> $GITHUB_OUTPUT
+
+      - name: Upload DMG
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ steps.dmg.outputs.file }}
+          asset_name: ${{ steps.dmg.outputs.file }}
+          asset_content_type: application/x-apple-diskimage
+
+  # Step 3: Build Windows NSIS installer
+  build-windows:
+    needs: create-release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run electron:build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find EXE
+        id: exe
+        shell: bash
+        run: echo "file=$(ls release/*.exe | head -1)" >> $GITHUB_OUTPUT
+
+      - name: Upload EXE
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ steps.exe.outputs.file }}
+          asset_name: ${{ steps.exe.outputs.file }}
+          asset_content_type: application/octet-stream
