@@ -144,7 +144,7 @@ if (buildResult.status !== 0) {
 }
 
 const releaseDir = join(ROOT, 'release');
-const dmgFiles = execSync(`ls "${releaseDir}"/*.dmg 2>/dev/null || echo ""`, { shell: true, encoding: 'utf-8' })
+const dmgFiles = exec(`ls "${releaseDir}"/*.dmg 2>/dev/null || echo ""`)
   .trim()
   .split('\n')
   .filter(Boolean);
@@ -153,7 +153,7 @@ const dmgFile = dmgFiles.find((f) => f.includes(`-${VERSION}-`) || f.includes(`-
 
 if (!dmgFile || !existsSync(dmgFile)) {
   console.error(`${red('✖')} DMG not found in ${releaseDir}`);
-  execSync(`ls -la "${releaseDir}"/*.dmg`, { shell: true });
+  exec(`ls -la "${releaseDir}"/*.dmg`);
   process.exit(1);
 }
 
