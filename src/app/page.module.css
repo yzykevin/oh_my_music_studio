@@ -315,6 +315,34 @@
   color: var(--text-secondary);
 }
 
+.skeleton {
+  background: var(--bg-card);
+  border-radius: 0.375rem;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeletonBlock {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.skeletonCard {
+  height: 64px;
+  border-radius: 0.5rem;
+}
+
+.skeletonRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
 .chartsRow {
   display: grid;
   grid-template-columns: 1fr 1fr;

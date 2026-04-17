@@ -31,7 +31,7 @@ export function FormatPieChart({ data, lang }: FormatPieChartProps) {
         {lang === 'zh' ? '插件格式分布' : 'Plugin Format Distribution'}
       </h4>
       <div className={styles.chartBody}>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={240}>
           <PieChart>
             <Pie
               data={data}
@@ -102,7 +102,7 @@ export function VendorBarChart({ data, lang }: VendorBarChartProps) {
         {lang === 'zh' ? '厂商插件数量 Top 10' : 'Plugins by Vendor (Top 10)'}
       </h4>
       <div className={styles.chartBody}>
-        <ResponsiveContainer width="100%" height={220}>
+        <ResponsiveContainer width="100%" height={280}>
           <PieChart>
             <Pie
               data={chartData}

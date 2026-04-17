@@ -53,6 +53,9 @@ const electronAPI = {
   onSoftwareUpdate: (callback: (software: unknown[]) => void) => {
     ipcRenderer.on('software:update', (_event, software) => callback(software));
   },
+  onHardwareUpdate: (callback: (hardware: HardwareInfo) => void) => {
+    ipcRenderer.on('hardware:update', (_event, hardware) => callback(hardware));
+  },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

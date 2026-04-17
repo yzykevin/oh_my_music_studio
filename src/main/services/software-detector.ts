@@ -238,8 +238,8 @@ const VENDOR_KEYWORDS: [RegExp, string][] = [
   [/native instruments/i, 'Native Instruments'],
   [/kontakt/i, 'Native Instruments'],
   [/pulsar/i, 'Pulsar Audio'],
-  [/massive/i, 'Native Instruments'],
-  [/reaktor/i, 'Native Instruments'],
+  [/\bmassive\b/i, 'Native Instruments'],
+  [/\breaktor\b/i, 'Native Instruments'],
   [/guitar rig/i, 'Native Instruments'],
   [/izotope/i, 'iZotope'],
   [/ozone/i, 'iZotope'],
@@ -259,11 +259,11 @@ const VENDOR_KEYWORDS: [RegExp, string][] = [
   [/black.?box.?analog/i, 'Plugin Alliance'],
   [/elysia/i, 'Plugin Alliance'],
   [/maag/i, 'Plugin Alliance'],
-  [/neve/i, 'Plugin Alliance'],
+  [/\bNeve\b/i, 'Plugin Alliance'],
   [/waves api/i, 'Waves'],
   [/\bapi\b/i, 'Plugin Alliance'],
-  [/waves/i, 'Waves'],
-  [/c6/i, 'Waves'],
+  [/\bWaves(?:\s|$|[A-Z])/i, 'Waves'],
+  [/\bc6\b/i, 'Waves'],
   [/fabfilter/i, 'FabFilter'],
   [/pro.q/i, 'FabFilter'],
   [/softube/i, 'Softube'],
@@ -366,26 +366,6 @@ async function readPlistKey(plistPath: string, key: string): Promise<string | nu
 
 type Architecture = 'x86_64' | 'arm64' | 'i386' | 'armv7' | 'universal' | 'unknown';
 
-async function getPluginArchitectures(bundlePath: string): Promise<Architecture[]> {
-  const macOSDir = path.join(bundlePath, 'Contents/MacOS');
-  if (!fs.existsSync(macOSDir)) return [];
-  try {
-    const files = fs.readdirSync(macOSDir);
-    const binary = files.find(f => !f.startsWith('.'));
-    if (!binary) return [];
-    const { stdout } = await execAsync(`file -b "${path.join(macOSDir, binary)}" 2>/dev/null`);
-    const arches: Architecture[] = [];
-    if (/x86_64/.test(stdout)) arches.push('x86_64');
-    if (/arm64|aarch64/.test(stdout)) arches.push('arm64');
-    if (/i386|i486|i686/.test(stdout)) arches.push('i386');
-    if (/armv7/.test(stdout)) arches.push('armv7');
-    if (/universal/.test(stdout)) arches.push('universal');
-    return arches.length > 0 ? arches : ['unknown'];
-  } catch {
-    return [];
-  }
-}
-
 async function getVendorFromAaxBundle(bundlePath: string): Promise<string | null> {
   const plistPath = path.join(bundlePath, 'Contents/Info.plist');
   if (!fs.existsSync(plistPath)) return null;
@@ -436,11 +416,75 @@ const APP_NAMES_TO_EXCLUDE_FROM_PLUGINS = new Set([
   'scaler detector audio', 'scaler detector control', 'scaler detector',
 ]);
 
+async function getPlistInfo(
+  bundlePath: string,
+): Promise<{ version: string; bundleIdentifier: string | undefined }> {
+  const plistPath = path.join(bundlePath, 'Contents/Info.plist');
+  if (!fs.existsSync(plistPath)) {
+    return { version: 'installed', bundleIdentifier: undefined };
+  }
+  const [ver, bid] = await Promise.all([
+    readPlistKey(plistPath, 'CFBundleShortVersionString'),
+    readPlistKey(plistPath, 'CFBundleIdentifier'),
+  ]);
+  return { version: ver ?? 'installed', bundleIdentifier: bid ?? undefined };
+}
+
+async function batchGetArchitectures(
+  entries: Array<{ name: string; fullPath: string }>,
+): Promise<Map<string, Architecture[]>> {
+  // Use `lipo -info` which handles universal binaries in one call per binary
+  // Batch into groups of 20 to avoid command-line length limits
+  const result = new Map<string, Architecture[]>();
+  const BATCH = 20;
+
+  for (let i = 0; i < entries.length; i += BATCH) {
+    const batch = entries.slice(i, i + BATCH);
+    // Run all in parallel within the batch
+      const archResults = await Promise.all(
+      batch.map(async (entry): Promise<{ name: string; archs: Architecture[] }> => {
+        const macOSDir = path.join(entry.fullPath, 'Contents/MacOS');
+        if (!fs.existsSync(macOSDir)) return { name: entry.name, archs: [] };
+        try {
+          const files = fs.readdirSync(macOSDir);
+          const binary = files.find(f => !f.startsWith('.'));
+          if (!binary) return { name: entry.name, archs: [] };
+          const binaryPath = path.join(macOSDir, binary);
+          const { stdout } = await execAsync(`lipo -info "${binaryPath}" 2>/dev/null || file -b "${binaryPath}" 2>/dev/null`);
+          const arches: Architecture[] = [];
+          if (/x86_64/.test(stdout)) arches.push('x86_64');
+          if (/arm64|aarch64/.test(stdout)) arches.push('arm64');
+          if (/i386|i486|i686/.test(stdout)) arches.push('i386');
+          if (/armv7/.test(stdout)) arches.push('armv7');
+          if (/universal/.test(stdout)) arches.push('universal');
+          return { name: entry.name, archs: arches.length > 0 ? arches : ['unknown'] };
+        } catch {
+          return { name: entry.name, archs: [] };
+        }
+      }),
+    );
+    for (const r of archResults) {
+      result.set(r.name, r.archs);
+    }
+  }
+  return result;
+}
+
+interface RawPluginEntry {
+  name: string;
+  fullPath: string;
+  lowerName: string;
+  version: string;
+  bundleIdentifier?: string;
+  vendor: string;
+  archs: Architecture[];
+}
+
 async function scanPluginsForType(
   type: 'vst' | 'vst3' | 'au' | 'aax',
-  pluginPaths: string[]
+  pluginPaths: string[],
 ): Promise<MusicSoftware[]> {
-  const plugins: MusicSoftware[] = [];
+  const rawEntries: RawPluginEntry[] = [];
 
   for (const pluginPath of pluginPaths) {
     const expandedPath = expandPath(pluginPath);
@@ -454,79 +498,74 @@ async function scanPluginsForType(
         const isVst3 = entry.name.endsWith('.vst3');
         const isComponent = entry.name.endsWith('.component');
         const isDll = entry.name.endsWith('.dll');
-
         const isAax = /\.aaxplugin$/i.test(entry.name);
         const isBundle = /\.bundle$/i.test(entry.name);
 
-        if (isDir || isVst3 || isComponent || isDll || isAax || isBundle) {
-          const cleanName = entry.name
-            .replace(/\.vst3$/i, '')
-            .replace(/\.aaxplugin$/i, '')
-            .replace(/\.bundle$/i, '')
-            .replace(/\.component$/i, '')
-            .replace(/\.dll$/i, '')
-            .replace(/\s+v\d+$/i, '')
-            .trim();
+        if (!isDir && !isVst3 && !isComponent && !isDll && !isAax && !isBundle) continue;
 
-          const lowerName = cleanName.toLowerCase();
+        const cleanName = entry.name
+          .replace(/\.vst3?$/i, '')
+          .replace(/\.aaxplugin$/i, '')
+          .replace(/\.bundle$/i, '')
+          .replace(/\.component$/i, '')
+          .replace(/\.dll$/i, '')
+          .replace(/\s*\([^)]*\)\s*/g, ' ')
+          .replace(/\s+v\d+$/i, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
 
-          if (APP_NAMES_TO_EXCLUDE_FROM_PLUGINS.has(lowerName)) {
-            continue;
-          }
+        const lowerName = cleanName.toLowerCase();
+        if (APP_NAMES_TO_EXCLUDE_FROM_PLUGINS.has(lowerName)) continue;
 
-          let vendor: string | null = null;
-
-          if ((isVst3 || isAax || isBundle) && isDir) {
-            vendor = await getVendorFromAaxBundle(fullPath);
-          } else if (isComponent) {
-            vendor = await getVendorFromAuComponent(fullPath);
-          }
-
-          if (!vendor) {
-            vendor = extractVendorFromPluginName(cleanName);
-          }
-
-          if (vendor === 'Apple') {
-            continue;
-          }
-
-          let version = 'installed';
-          let bundleIdentifier: string | undefined;
-          const plistPath = path.join(fullPath, 'Contents/Info.plist');
-          if (fs.existsSync(plistPath)) {
-            const ver = await readPlistKey(plistPath, 'CFBundleShortVersionString');
-            if (ver) version = ver;
-            const bid = await readPlistKey(plistPath, 'CFBundleIdentifier');
-            if (bid) bundleIdentifier = bid;
-          }
-
-          const archs = await getPluginArchitectures(fullPath);
-          const is64Bit = archs.includes('x86_64') || archs.includes('arm64');
-          const is32Bit = archs.includes('i386') || archs.includes('armv7');
-
-          plugins.push({
-            name: cleanName,
-            path: fullPath,
-            version,
-            bundleIdentifier,
-            type: type as 'vst' | 'vst3' | 'au' | 'aax',
-            category: 'plugin',
-            vendor,
-            detectedAt: Date.now(),
-            architectures: archs,
-            is64Bit,
-            is32Bit,
-            isDuplicate: false,
-            isOrphaned: false,
-          });
+        let vendor: string | null = null;
+        if ((isVst3 || isAax || isBundle) && isDir) {
+          vendor = await getVendorFromAaxBundle(fullPath);
+        } else if (isComponent) {
+          vendor = await getVendorFromAuComponent(fullPath);
         }
+        if (!vendor) vendor = extractVendorFromPluginName(cleanName);
+        if (vendor === 'Apple') continue;
+
+        const { version, bundleIdentifier } = await getPlistInfo(fullPath);
+
+        rawEntries.push({
+          name: cleanName,
+          fullPath,
+          lowerName,
+          version,
+          bundleIdentifier,
+          vendor,
+          archs: [],
+        });
       }
     } catch {
       continue;
     }
   }
 
-  return plugins;
+  // Batch architecture detection
+  const archMap = await batchGetArchitectures(
+    rawEntries.map(e => ({ name: e.lowerName, fullPath: e.fullPath })),
+  );
+
+  return rawEntries.map(e => {
+    const archs = archMap.get(e.lowerName) ?? [];
+    return {
+      name: e.name,
+      path: e.fullPath,
+      version: e.version,
+      bundleIdentifier: e.bundleIdentifier,
+      type: type as 'vst' | 'vst3' | 'au' | 'aax',
+      category: 'plugin',
+      vendor: e.vendor,
+      detectedAt: Date.now(),
+      architectures: archs,
+      is64Bit: archs.includes('x86_64') || archs.includes('arm64'),
+      is32Bit: archs.includes('i386') || archs.includes('armv7'),
+      isDuplicate: false,
+      isOrphaned: false,
+    };
+  });
 }
 
 async function detectApp(config: SoftwareConfig, category: MusicSoftware['category']): Promise<MusicSoftware | null> {
@@ -574,76 +613,77 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
 }
 
 export async function scanMusicSoftware(): Promise<MusicSoftware[]> {
-  const results: MusicSoftware[] = [];
+  if (process.platform !== 'darwin') return [];
 
-  if (process.platform === 'darwin') {
-    for (const config of MAC_DAW_CONFIGS) {
-      const app = await detectApp(config, 'daw');
-      if (app) results.push(app);
-    }
+  const [dawResults, auxResults, driverResults] = await Promise.all([
+    Promise.all(MAC_DAW_CONFIGS.map(c => detectApp(c, 'daw'))),
+    Promise.all(MAC_AUXILIARY_CONFIGS.map(c => detectApp(c, 'auxiliary'))),
+    Promise.all(MAC_DRIVER_CONFIGS.map(c => detectApp(c, 'driver'))),
+  ]);
 
-    for (const config of MAC_AUXILIARY_CONFIGS) {
-      const app = await detectApp(config, 'auxiliary');
-      if (app) results.push(app);
-    }
+  const results: MusicSoftware[] = [
+    ...dawResults.filter((a): a is NonNullable<typeof a> => a !== null),
+    ...auxResults.filter((a): a is NonNullable<typeof a> => a !== null),
+    ...driverResults.filter((a): a is NonNullable<typeof a> => a !== null),
+  ];
 
-    for (const config of MAC_DRIVER_CONFIGS) {
-      const app = await detectApp(config, 'driver');
-      if (app) results.push(app);
-    }
+  const ilokPath = await spotlightSearch('iLok License Manager.app');
+  if (ilokPath) {
+    results.push({
+      name: 'iLok License Manager',
+      path: ilokPath,
+      version: 'installed',
+      type: 'ilok',
+      category: 'ilok',
+      vendor: 'PACE',
+      detectedAt: Date.now(),
+      architectures: [],
+      is64Bit: false,
+      is32Bit: false,
+      isDuplicate: false,
+      isOrphaned: false,
+    });
+  }
 
-    const ilokPath = await spotlightSearch('iLok License Manager.app');
-    if (ilokPath) {
-      results.push({
-        name: 'iLok License Manager',
-        path: ilokPath,
-        version: 'installed',
-        type: 'ilok',
-        category: 'ilok',
-        vendor: 'PACE',
-        detectedAt: Date.now(),
-        architectures: [],
-        is64Bit: false,
-        is32Bit: false,
-        isDuplicate: false,
-        isOrphaned: false,
-      });
-    }
+  const pluginResults = await Promise.all(
+    Object.entries(MAC_PLUGIN_PATHS).map(([type, paths]) =>
+      scanPluginsForType(type as 'vst' | 'vst3' | 'au' | 'aax', paths as string[]),
+    ),
+  );
+  results.push(...pluginResults.flat());
 
-    for (const [type, paths] of Object.entries(MAC_PLUGIN_PATHS)) {
-      const plugins = await scanPluginsForType(
-        type as 'vst' | 'vst3' | 'au' | 'aax',
-        paths as string[]
-      );
-      results.push(...plugins);
+  const bundleIdGroups: Record<string, MusicSoftware[]> = {};
+  for (const p of results) {
+    if (p.bundleIdentifier) {
+      (bundleIdGroups[p.bundleIdentifier] ??= []).push(p);
     }
+  }
 
-    const bundleIdGroups: Record<string, MusicSoftware[]> = {};
-    for (const p of results) {
-      if (p.bundleIdentifier) {
-        (bundleIdGroups[p.bundleIdentifier] ??= []).push(p);
-      }
-    }
-    for (const p of results) {
-      const group = bundleIdGroups[p.bundleIdentifier ?? ''];
-      if (group && group.length > 1) {
+  for (const p of results) {
+    p.isDuplicate = false;
+    p.duplicatePaths = undefined;
+  }
+
+  for (const [, group] of Object.entries(bundleIdGroups)) {
+    if (group.length < 2) continue;
+    const has32 = group.some(p => p.is32Bit);
+    const has64 = group.some(p => p.is64Bit);
+    if (has32 && has64) {
+      for (const p of group) {
         p.isDuplicate = true;
         p.duplicatePaths = group.map(g => g.path);
-      } else {
-        p.isDuplicate = false;
-        p.duplicatePaths = undefined;
       }
     }
+  }
 
-    const dawVendors = new Set(
-      results.filter(r => r.type === 'daw').map(r => r.vendor).filter(Boolean)
-    );
-    for (const p of results) {
-      if (p.category === 'plugin' && p.vendor) {
-        p.isOrphaned = !dawVendors.has(p.vendor);
-      } else {
-        p.isOrphaned = false;
-      }
+  const dawVendors = new Set(
+    results.filter(r => r.type === 'daw').map(r => r.vendor).filter(Boolean),
+  );
+  for (const p of results) {
+    if (p.category === 'plugin' && p.vendor) {
+      p.isOrphaned = !dawVendors.has(p.vendor);
+    } else {
+      p.isOrphaned = false;
     }
   }
 

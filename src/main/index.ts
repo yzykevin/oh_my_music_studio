@@ -195,13 +195,38 @@ async function updateSoftwareList(): Promise<void> {
   }
 }
 
+function startBackgroundScans(): void {
+  log.info('Starting background scans...');
+
+  scanMusicSoftware().then((results) => {
+    softwareList = results;
+    log.info(`Background software scan complete: ${results.length} items`);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('software:update', results);
+    }
+  }).catch((error) => {
+    log.error('Background software scan failed:', error);
+  });
+
+  detectAllHardware().then((hw) => {
+    log.info('Background hardware scan complete');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('hardware:update', hw);
+    }
+  }).catch((error) => {
+    log.error('Background hardware scan failed:', error);
+  });
+}
+
 ipcMain.handle('system:info', async () => {
   return await getSystemInfo();
 });
 
 ipcMain.handle('software:scan', async () => {
   log.info('Scanning for music software...');
-  await updateSoftwareList();
+  if (softwareList.length === 0) {
+    await updateSoftwareList();
+  }
   return softwareList;
 });
 
@@ -263,6 +288,7 @@ ipcMain.handle('dialog:show-save', async (_event, {
 
 app.whenReady().then(() => {
   log.info('App is ready');
+  startBackgroundScans();
   createWindow();
 
   app.on('activate', () => {

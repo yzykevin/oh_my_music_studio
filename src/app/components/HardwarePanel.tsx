@@ -39,6 +39,7 @@ interface HardwareInfo {
 interface HardwarePanelProps {
   hardware: HardwareInfo | null;
   lang: 'en' | 'zh';
+  isLoading?: boolean;
   translations: {
     hardware: string;
     audioDevices: string;
@@ -76,12 +77,30 @@ function TransportIcon({ transport }: { transport: string }) {
   return <span>{TRANSPORT_ICONS[transport] ?? '❓'}</span>;
 }
 
-export function HardwarePanel({ hardware, lang, translations: t }: HardwarePanelProps) {
+export function HardwarePanel({ hardware, lang, isLoading, translations: t }: HardwarePanelProps) {
+  if (isLoading) {
+    return (
+      <div className={styles.hardwareSection}>
+        <h2 className={styles.sectionTitle}>{t.hardware}</h2>
+        <div className={styles.deviceList}>
+          {[0, 1, 2].map(i => (
+            <div key={i} className={styles.deviceCard} style={{ opacity: 0.4 }}>
+              <div className={styles.deviceHeader}>
+                <span style={{ fontSize: '1.25rem', opacity: 0.5 }}>…</span>
+                <span className={styles.deviceName} style={{ opacity: 0.5 }}>{lang === 'zh' ? '正在扫描…' : 'Scanning…'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (!hardware) {
     return (
       <div className={styles.hardwareSection}>
         <h2 className={styles.sectionTitle}>{t.hardware}</h2>
-        <p className={styles.empty}>{lang === 'zh' ? '加载中…' : 'Loading…'}</p>
+        <p className={styles.empty}>{t.noHardware}</p>
       </div>
     );
   }

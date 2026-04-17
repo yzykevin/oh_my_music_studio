@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import styles from './page.module.css';
 import { translations, type Language, type TranslationKey } from './i18n';
 import { VendorLogo } from './vendor-logos';
@@ -52,43 +52,43 @@ export default function Home() {
   const { theme, toggleTheme } = useTheme();
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [software, setSoftware] = useState<MusicSoftware[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [softwareLoaded, setSoftwareLoaded] = useState(false);
   const [version, setVersion] = useState('');
   const [lang, setLang] = useState<Language>('en');
   const [expandedVendors, setExpandedVendors] = useState<Set<string>>(new Set());
   const [hardware, setHardware] = useState<HardwareInfo | null>(null);
+  const [hardwareLoaded, setHardwareLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
 
-  const t = (key: TranslationKey): string => {
+  const t = useCallback((key: TranslationKey): string => {
     return translations[lang][key];
-  };
+  }, [lang]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const sysInfo = await window.electronAPI.getSystemInfo();
-        setSystemInfo(sysInfo);
-
-        const sw = await window.electronAPI.scanSoftware();
-        setSoftware(sw);
-
-        const ver = await window.electronAPI.getAppVersion();
-        setVersion(ver);
-
-        const hw = await window.electronAPI.scanHardware();
-        setHardware(hw);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    Promise.all([
+      window.electronAPI.getSystemInfo().then(setSystemInfo),
+      window.electronAPI.getAppVersion().then(setVersion),
+    ]);
 
     window.electronAPI.onSoftwareUpdate((newSoftware) => {
-      setSoftware(newSoftware);
+      setSoftware(newSoftware as MusicSoftware[]);
+      setSoftwareLoaded(true);
+    });
+
+    window.electronAPI.onHardwareUpdate((hw) => {
+      setHardware(hw);
+      setHardwareLoaded(true);
+    });
+
+    window.electronAPI.scanSoftware().then((sw) => {
+      setSoftware(sw);
+      setSoftwareLoaded(true);
+    });
+
+    window.electronAPI.scanHardware().then((hw) => {
+      setHardware(hw);
+      setHardwareLoaded(true);
     });
   }, []);
 
@@ -250,9 +250,9 @@ export default function Home() {
                       <span className={styles.checkmark}>✓</span>
                       <span className={styles.pluginName}>{plugin.name}</span>
                       {plugin.isDuplicate && (
-                        <span className={styles.riskBadge} title="Duplicate plugin (same bundleIdentifier in multiple paths)">⚠️ Duplicate</span>
+                        <span className={styles.riskBadge} title="32-bit and 64-bit versions both installed — 32-bit version may not load in modern DAWs">⚠️ 32+64</span>
                       )}
-                      {plugin.is32Bit && (
+                      {!plugin.isDuplicate && plugin.is32Bit && (
                         <span className={styles.riskBadge32} title="32-bit plugin — may not work in modern DAWs">⚠️ 32-bit</span>
                       )}
                       <div className={styles.formatIcons}>
@@ -276,7 +276,10 @@ export default function Home() {
     );
   };
 
-  if (loading) {
+  const hasSoftware = software.length > 0;
+  const hasHardware = hardware !== null;
+
+  if (!systemInfo) {
     return (
       <div className={styles.container}>
         <div className={styles.loading}>{t('loading')}</div>
@@ -289,10 +292,9 @@ export default function Home() {
       <header className={styles.header}>
         <h1>{t('appTitle')}</h1>
         <div className={styles.headerRight}>
-          <ExportMenu
-            software={software}
-            hardware={hardware}
-          />
+          {hasSoftware && hasHardware && (
+            <ExportMenu software={software} hardware={hardware} />
+          )}
           <button
             className={styles.themeButton}
             onClick={toggleTheme}
@@ -306,7 +308,7 @@ export default function Home() {
           >
             {lang === 'en' ? '中文' : 'EN'}
           </button>
-          <span className={styles.version}>v{version}</span>
+          <span className={styles.version}>v{version || '…'}</span>
         </div>
       </header>
 
@@ -315,6 +317,7 @@ export default function Home() {
           hardware={hardware}
           lang={lang}
           translations={translations[lang]}
+          isLoading={!hardwareLoaded && !hasHardware}
         />
 
         <section className={styles.section}>
@@ -371,7 +374,7 @@ export default function Home() {
             </div>
           )}
 
-          {pluginsWithFormats.length > 0 && (
+          {pluginsWithFormats.length > 0 ? (
             <>
               <div className={styles.dawSection}>
                 <SummaryCards
@@ -415,13 +418,19 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+
+              {renderPluginSection()}
             </>
-          )}
-
-          {renderPluginSection()}
-
-          {software.length === 0 && (
+          ) : softwareLoaded ? (
             <p className={styles.empty}>{t('noSoftware')}</p>
+          ) : (
+            <div className={styles.dawSection}>
+              <div className={`${styles.skeleton} ${styles.skeletonCard}`} style={{ height: 80, marginBottom: '1rem' }} />
+              <div className={styles.chartsRow}>
+                <div className={`${styles.skeleton}`} style={{ height: 220, borderRadius: '0.5rem' }} />
+                <div className={`${styles.skeleton}`} style={{ height: 220, borderRadius: '0.5rem' }} />
+              </div>
+            </div>
           )}
         </section>
       </main>
@@ -479,6 +488,7 @@ export default function Home() {
         writeFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
         writePdfFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
         onSoftwareUpdate: (callback: (software: MusicSoftware[]) => void) => void;
+        onHardwareUpdate: (callback: (hardware: HardwareInfo) => void) => void;
       };
     }
 }
