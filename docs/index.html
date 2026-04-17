@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OMS — Oh My Music Studio</title>
-  <meta name="description" content="A desktop application for analyzing local music production tools, system information, with real-time display." />
+  <meta name="description" content="A desktop application for analyzing local music production tools and system information." />
   <style>
     :root {
       --bg: #0d1117;
@@ -13,7 +13,6 @@
       --text: #e6edf3;
       --text-muted: #8b949e;
       --accent: #e86a17;
-      --accent2: #f5a623;
       --green: #3fb950;
       --orange: #f0883e;
     }
@@ -26,7 +25,6 @@
     }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
-
     .container { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
 
     /* Header */
@@ -39,28 +37,29 @@
       backdrop-filter: blur(8px);
       z-index: 100;
     }
-    .header-inner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    .header-inner { display: flex; justify-content: space-between; align-items: center; }
     .logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none !important; }
     .logo:hover { text-decoration: none !important; }
     .logo-img { width: 32px; height: 32px; border-radius: 7px; display: block; }
     .logo-text { font-size: 1rem; font-weight: 700; color: var(--text); }
     .logo-text span { display: block; font-size: 0.65rem; color: var(--text-muted); font-weight: 400; }
-    nav { display: flex; align-items: center; gap: 0.5rem; }
-    nav a { color: var(--text-muted); font-size: 0.88rem; }
-    nav a:hover { color: var(--text); text-decoration: none; }
+    .header-right { display: flex; align-items: center; gap: 0.5rem; }
+    .nav-link { color: var(--text-muted); font-size: 0.88rem; }
+    .nav-link:hover { color: var(--text); text-decoration: none; }
+    .github-btn {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.3rem 0.7rem;
+      font-size: 0.82rem; font-weight: 600; color: var(--text);
+      transition: all 0.15s; text-decoration: none !important;
+    }
+    .github-btn:hover { border-color: var(--text-muted); text-decoration: none !important; }
+    .github-btn svg { fill: var(--text); }
     .lang-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.25rem 0.6rem;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.15s;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.3rem 0.6rem;
+      font-size: 0.8rem; color: var(--text-muted);
+      cursor: pointer; transition: all 0.15s;
     }
     .lang-btn:hover { border-color: var(--text-muted); color: var(--text); }
 
@@ -70,73 +69,37 @@
       display: inline-block;
       background: rgba(232,106,23,0.12);
       border: 1px solid rgba(232,106,23,0.3);
-      color: var(--accent);
-      font-size: 0.78rem;
-      padding: 0.2rem 0.7rem;
-      border-radius: 999px;
-      margin-bottom: 1.5rem;
+      color: var(--accent); font-size: 0.78rem;
+      padding: 0.2rem 0.7rem; border-radius: 999px; margin-bottom: 1.5rem;
     }
-    .hero h1 {
-      font-size: 3rem;
-      font-weight: 800;
-      line-height: 1.15;
-      margin-bottom: 1rem;
-      letter-spacing: -0.03em;
-    }
+    .hero h1 { font-size: 3rem; font-weight: 800; line-height: 1.15; margin-bottom: 1rem; letter-spacing: -0.03em; }
     .hero h1 .accent { color: var(--accent); }
-    .hero-sub {
-      font-size: 1.1rem;
-      color: var(--text-muted);
-      max-width: 560px;
-      margin: 0 auto 2.5rem;
-    }
+    .hero-sub { font-size: 1.1rem; color: var(--text-muted); max-width: 560px; margin: 0 auto 2.5rem; }
 
-    .download-row {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 2.5rem;
-    }
+    .download-row { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2.5rem; }
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.6rem 1.2rem;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      transition: all 0.15s;
-      text-decoration: none !important;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.65rem 1.3rem; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600;
+      transition: all 0.15s; text-decoration: none !important;
     }
     .btn:hover { text-decoration: none !important; }
-    .btn-apple {
-      background: var(--text);
-      color: #0d1117;
-    }
-    .btn-apple:hover { background: #fff; text-decoration: none !important; }
-    .btn-win {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-    .btn-win:hover { border-color: var(--text-muted); color: var(--text); text-decoration: none !important; }
+    .btn-apple { background: var(--text); color: #0d1117; }
+    .btn-apple:hover { background: #fff; }
+    .btn-win { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-win:hover { border-color: var(--text-muted); color: var(--text); }
+    .btn-all { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn-all:hover { border-color: var(--text-muted); color: var(--text); }
 
     /* Screenshot */
     .screenshot {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 2.5rem 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin: 2.5rem 0;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
     .screenshot-bar {
-      background: #1c2128;
-      padding: 0.6rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
+      background: #1c2128; padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.4rem;
       border-bottom: 1px solid var(--border);
     }
     .dot { width: 10px; height: 10px; border-radius: 50%; }
@@ -144,17 +107,13 @@
     .dot-yellow { background: #febc2e; }
     .dot-green { background: #28c840; }
     .screenshot-body {
-      padding: 1.5rem;
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 1rem;
-      min-height: 260px;
+      padding: 1.5rem; display: grid;
+      grid-template-columns: 200px 1fr; gap: 1rem; min-height: 260px;
     }
     .screenshot-sidebar {
       background: rgba(232,106,23,0.06);
       border: 1px solid rgba(232,106,23,0.18);
-      border-radius: 8px;
-      padding: 1rem;
+      border-radius: 8px; padding: 1rem;
     }
     .sb-item { height: 8px; border-radius: 4px; margin-bottom: 9px; background: rgba(255,255,255,0.07); }
     .sb-item:first-child { width: 75%; background: rgba(232,106,23,0.3); margin-bottom: 12px; height: 10px; }
@@ -164,10 +123,8 @@
     .sb-item:nth-child(5) { width: 60%; margin-bottom: 0; }
     .screenshot-main { display: flex; flex-direction: column; gap: 0.75rem; }
     .scard {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
+      background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1rem;
     }
     .scard-row { height: 7px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 6px; }
     .scard-row:last-child { margin-bottom: 0; }
@@ -188,9 +145,7 @@
 
     /* Stats */
     .stats {
-      display: flex;
-      justify-content: center;
-      gap: 3rem;
+      display: flex; justify-content: center; gap: 3rem;
       padding: 1.5rem 0;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
@@ -202,23 +157,11 @@
 
     /* Features */
     .features { padding: 3rem 0; }
-    .section-title {
-      text-align: center;
-      font-size: 1.6rem;
-      font-weight: 700;
-      margin-bottom: 2.5rem;
-    }
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1rem;
-    }
+    .section-title { text-align: center; font-size: 1.6rem; font-weight: 700; margin-bottom: 2.5rem; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
     .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.2rem;
-      transition: border-color 0.15s;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.2rem; transition: border-color 0.15s;
     }
     .feature-card:hover { border-color: rgba(232,106,23,0.4); }
     .feature-icon {
@@ -242,46 +185,45 @@
     }
 
     /* Footer */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 2rem 0;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.82rem;
-    }
+    footer { border-top: 1px solid var(--border); padding: 2rem 0; text-align: center; color: var(--text-muted); font-size: 0.82rem; }
     footer p { margin-bottom: 0.35rem; }
     footer a { color: var(--text-muted); }
 
-    /* Bilingual — ZH hidden by default */
-    [lang=en] .zh { display: none; }
-    [lang=zh] .en { display: none; }
+    /* Bilingual — toggle via [data-lang] on body */
+    [data-lang=en] .zh { display: none !important; }
+    [data-lang=zh] .en { display: none !important; }
 
     @media (max-width: 640px) {
       .hero h1 { font-size: 2rem; }
       .screenshot-body { grid-template-columns: 1fr; }
       .screenshot-sidebar { display: none; }
       .stats { gap: 1.5rem; flex-wrap: wrap; }
+      .header-right .nav-link { display: none; }
     }
   </style>
 </head>
-<body lang="en">
+<body data-lang="en">
 
 <header>
   <div class="container header-inner">
     <a href="#" class="logo">
       <img src="icon.png" alt="OMS" class="logo-img" />
-      <div class="logo-text">
-        OMS
-        <span>Oh My Music Studio</span>
-      </div>
+      <div class="logo-text">OMS<span>Oh My Music Studio</span></div>
     </a>
-    <nav>
-      <a href="#features" class="en">Features</a>
-      <a href="#features" class="zh">功能特性</a>
-      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="en">Downloads</a>
-      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="zh">下载</a>
-      <button class="lang-btn" onclick="toggleLang()">中文</button>
-    </nav>
+    <div class="header-right">
+      <a href="#features" class="nav-link en">Features</a>
+      <a href="#features" class="nav-link zh">功能特性</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="nav-link en">Downloads</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="nav-link zh">下载</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio" target="_blank" class="github-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+        </svg>
+        <span class="en">Star</span>
+        <span class="zh">Star</span>
+      </a>
+      <button class="lang-btn" id="langBtn">中文</button>
+    </div>
   </div>
 </header>
 
@@ -300,12 +242,14 @@
       <span class="zh">一款桌面应用，扫描并分析你已安装的音乐制作工具、插件和系统信息，全部集中在一处。</span>
     </p>
 
-    <div class="download-row">
-      <a href="https://github.com/yzykevin/oh_my_music_studio/releases/download/v1.1.3/OMS-1.1.3-arm64.dmg" class="btn btn-apple">
+    <div class="download-row" id="downloadArea">
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases/download/v1.1.3/OMS-1.1.3-arm64.dmg"
+         id="btnPrimary" class="btn btn-apple">
         🍎 <span class="en">Download for macOS</span><span class="zh">下载 macOS 版</span>
       </a>
-      <a href="https://github.com/yzykevin/oh_my_music_studio/releases/download/v1.1.3/OMS.Setup.1.1.3.exe" class="btn btn-win">
-        🪟 <span class="en">Download for Windows</span><span class="zh">下载 Windows 版</span>
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases"
+         id="btnSecondary" class="btn btn-all" target="_blank">
+        <span class="en">See all releases</span><span class="zh">查看所有版本</span>
       </a>
     </div>
 
@@ -364,85 +308,73 @@
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon icon-p">💻</div>
-        <h3 class="en">System Information</h3>
-        <h3 class="zh">系统信息</h3>
+        <h3 class="en">System Information</h3><h3 class="zh">系统信息</h3>
         <p class="en">Real-time display of platform, CPU, memory, and uptime.</p>
         <p class="zh">实时显示平台、CPU、内存和运行时长。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-p">🎹</div>
-        <h3 class="en">DAW Detection</h3>
-        <h3 class="zh">DAW 检测</h3>
+        <h3 class="en">DAW Detection</h3><h3 class="zh">DAW 检测</h3>
         <p class="en">Auto-detect Logic, Ableton, Pro Tools, Cubase, Reaper, and more.</p>
         <p class="zh">自动识别 Logic、Ableton、Pro Tools、Cubase、Reaper 等 DAW。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-p">🔌</div>
-        <h3 class="en">Plugin Scanning</h3>
-        <h3 class="zh">插件扫描</h3>
+        <h3 class="en">Plugin Scanning</h3><h3 class="zh">插件扫描</h3>
         <p class="en">Scan VST, VST3, AU, AAX. Same plugin in multiple formats merged into one entry.</p>
         <p class="zh">扫描 VST、VST3、AU、AAX，同名插件多格式自动合并为一条。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-p">🏭</div>
-        <h3 class="en">Vendor Grouping</h3>
-        <h3 class="zh">厂商分组</h3>
+        <h3 class="en">Vendor Grouping</h3><h3 class="zh">厂商分组</h3>
         <p class="en">Plugins grouped by vendor. Quick search and format filter.</p>
         <p class="zh">按厂商分组展示，支持搜索和格式过滤。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-g">🔊</div>
-        <h3 class="en">Hardware Panel</h3>
-        <h3 class="zh">硬件面板</h3>
+        <h3 class="en">Hardware Panel</h3><h3 class="zh">硬件面板</h3>
         <p class="en">Audio devices, MIDI, Bluetooth audio, running DAWs, and login items.</p>
         <p class="zh">音频设备、MIDI、蓝牙音频、运行中的 DAW、开机启动项。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-g">📡</div>
-        <h3 class="en">Driver Detection</h3>
-        <h3 class="zh">驱动检测</h3>
+        <h3 class="en">Driver Detection</h3><h3 class="zh">驱动检测</h3>
         <p class="en">Display audio interface driver status and configuration.</p>
         <p class="zh">显示音频接口驱动状态和配置。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-o">🔑</div>
-        <h3 class="en">iLok Support</h3>
-        <h3 class="zh">iLok 支持</h3>
+        <h3 class="en">iLok Support</h3><h3 class="zh">iLok 支持</h3>
         <p class="en">Detect iLok License Manager installation.</p>
         <p class="zh">检测 iLok License Manager 是否安装。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-o">📊</div>
-        <h3 class="en">Plugin Analytics</h3>
-        <h3 class="zh">插件分析</h3>
+        <h3 class="en">Plugin Analytics</h3><h3 class="zh">插件分析</h3>
         <p class="en">Visualize format distribution and vendor breakdown with interactive charts.</p>
         <p class="zh">交互式图表展示插件格式分布和厂商占比。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-o">📄</div>
-        <h3 class="en">Report Export</h3>
-        <h3 class="zh">报告导出</h3>
+        <h3 class="en">Report Export</h3><h3 class="zh">报告导出</h3>
         <p class="en">Export full software scan as JSON or PDF.</p>
         <p class="zh">将扫描结果导出为 JSON 或 PDF 格式。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-o">🌙</div>
-        <h3 class="en">Dark / Light Theme</h3>
-        <h3 class="zh">深色/浅色主题</h3>
+        <h3 class="en">Dark / Light Theme</h3><h3 class="zh">深色/浅色主题</h3>
         <p class="en">One-click toggle between dark and light mode.</p>
         <p class="zh">一键切换深色和浅色模式。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-g">🌐</div>
-        <h3 class="en">Bilingual UI</h3>
-        <h3 class="zh">中英双语</h3>
+        <h3 class="en">Bilingual UI</h3><h3 class="zh">中英双语</h3>
         <p class="en">Built-in Chinese/English toggle. No configuration needed.</p>
         <p class="zh">内置中英文切换，无需任何配置。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon icon-p">⚡</div>
-        <h3 class="en">Parallel Scanning</h3>
-        <h3 class="zh">并行扫描</h3>
+        <h3 class="en">Parallel Scanning</h3><h3 class="zh">并行扫描</h3>
         <p class="en">Plugins scanned concurrently — faster startup, no UI blocking.</p>
         <p class="zh">插件并发扫描，秒开不卡顿。</p>
       </div>
@@ -468,7 +400,8 @@
 <footer>
   <div class="container">
     <p>
-      <a href="https://github.com/yzykevin/oh_my_music_studio" target="_blank">GitHub</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio" target="_blank" class="en">GitHub</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio" target="_blank" class="zh">GitHub</a>
       &nbsp;·&nbsp;
       <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="en">Releases</a>
       <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="zh">下载</a>
@@ -481,11 +414,53 @@
 </footer>
 
 <script>
-  function toggleLang() {
-    const html = document.documentElement;
-    const isEn = html.getAttribute('lang') === 'en';
-    html.setAttribute('lang', isEn ? 'zh' : 'en');
-    document.querySelector('.lang-btn').textContent = isEn ? 'English' : '中文';
+  // ── Language Toggle ──────────────────────────────────────────────
+  const LANG_KEY = 'oms-lang';
+
+  function getStoredLang() {
+    return localStorage.getItem(LANG_KEY) || 'en';
+  }
+
+  function applyLang(lang) {
+    document.body.setAttribute('data-lang', lang);
+    localStorage.setItem(LANG_KEY, lang);
+    document.getElementById('langBtn').textContent = lang === 'en' ? '中文' : 'English';
+  }
+
+  // Apply stored or detected language on load
+  applyLang(getStoredLang());
+
+  document.getElementById('langBtn').addEventListener('click', function () {
+    const cur = document.body.getAttribute('data-lang');
+    applyLang(cur === 'en' ? 'zh' : 'en');
+  });
+
+  // ── OS Detection & Download Button ─────────────────────────────
+  const ua = navigator.userAgent;
+  const isMac = /Mac|iPhone|iPad|iPod/.test(ua);
+  const isWin = /Win/.test(ua) && !/Mac/.test(ua);
+
+  const btnPrimary = document.getElementById('btnPrimary');
+  const btnSecondary = document.getElementById('btnSecondary');
+  const lang = getStoredLang();
+
+  if (isMac || isWin) {
+    if (isMac) {
+      btnPrimary.href = 'https://github.com/yzykevin/oh_my_music_studio/releases/download/v1.1.3/OMS-1.1.3-arm64.dmg';
+      btnPrimary.className = 'btn btn-apple';
+      btnPrimary.innerHTML = '🍎 <span class="en">Download for macOS</span><span class="zh">下载 macOS 版</span>';
+    } else {
+      btnPrimary.href = 'https://github.com/yzykevin/oh_my_music_studio/releases/download/v1.1.3/OMS.Setup.1.1.3.exe';
+      btnPrimary.className = 'btn btn-win';
+      btnPrimary.innerHTML = '🪟 <span class="en">Download for Windows</span><span class="zh">下载 Windows 版</span>';
+    }
+    btnSecondary.style.display = '';
+  } else {
+    // Unknown OS — show both buttons
+    btnPrimary.href = 'https://github.com/yzykevin/oh_my_music_studio/releases';
+    btnPrimary.className = 'btn btn-all';
+    btnPrimary.innerHTML = '⬇️ <span class="en">View Downloads</span><span class="zh">查看下载</span>';
+    btnSecondary.style.display = 'none';
   }
 </script>
 
