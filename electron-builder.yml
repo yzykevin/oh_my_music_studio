@@ -2,15 +2,6 @@ appId: com.ohmyapp.musicstudio
 productName: OMS
 directories:
   output: release
-
-files:
-  - dist/**/*
-  - .next/standalone/.next/server/app/index.html
-  - .next/static/**/*
-  - package.json
-  - "!node_modules/**/*"
-  - node_modules/electron-log/**/*
-
 mac:
   target: dmg
   icon: build/icon.icns
@@ -21,7 +12,6 @@ mac:
   extendInfo:
     CFBundleDisplayName: OMS
     NSAudioCaptureUsageDescription: "OMS needs microphone access for audio device detection and monitoring."
-
 win:
   target: nsis
   icon: build/icon.png
