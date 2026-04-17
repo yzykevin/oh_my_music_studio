@@ -97,51 +97,7 @@
       border-radius: 12px; overflow: hidden; margin: 2.5rem 0;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
-    .screenshot-bar {
-      background: #1c2128; padding: 0.6rem 1rem;
-      display: flex; align-items: center; gap: 0.4rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-red { background: #ff5f57; }
-    .dot-yellow { background: #febc2e; }
-    .dot-green { background: #28c840; }
-    .screenshot-body {
-      padding: 1.5rem; display: grid;
-      grid-template-columns: 200px 1fr; gap: 1rem; min-height: 260px;
-    }
-    .screenshot-sidebar {
-      background: rgba(232,106,23,0.06);
-      border: 1px solid rgba(232,106,23,0.18);
-      border-radius: 8px; padding: 1rem;
-    }
-    .sb-item { height: 8px; border-radius: 4px; margin-bottom: 9px; background: rgba(255,255,255,0.07); }
-    .sb-item:first-child { width: 75%; background: rgba(232,106,23,0.3); margin-bottom: 12px; height: 10px; }
-    .sb-item:nth-child(2) { width: 55%; }
-    .sb-item:nth-child(3) { width: 65%; }
-    .sb-item:nth-child(4) { width: 45%; }
-    .sb-item:nth-child(5) { width: 60%; margin-bottom: 0; }
-    .screenshot-main { display: flex; flex-direction: column; gap: 0.75rem; }
-    .scard {
-      background: rgba(255,255,255,0.025); border: 1px solid var(--border);
-      border-radius: 8px; padding: 1rem;
-    }
-    .scard-row { height: 7px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 6px; }
-    .scard-row:last-child { margin-bottom: 0; }
-    .scard-row:nth-child(1) { width: 75%; }
-    .scard-row:nth-child(2) { width: 55%; }
-    .scard-row:nth-child(3) { width: 65%; }
-    .scard-badge-row { display: flex; gap: 0.35rem; margin-top: 6px; }
-    .badge { height: 18px; width: 42px; border-radius: 4px; }
-    .badge-vst { background: #8B5CF6; }
-    .badge-vst3 { background: #A855F7; }
-    .badge-au { background: #F97316; }
-    .scard-flex { display: flex; gap: 0.75rem; align-items: center; }
-    .scard-icon { width: 44px; height: 44px; border-radius: 8px; background: rgba(232,106,23,0.18); flex-shrink: 0; }
-    .scard-content { flex: 1; }
-    .scard-sm { height: 6px; width: 45%; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 5px; }
-    .scard-pie { display: flex; gap: 0.5rem; flex: 1; }
-    .pie-block { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 6px; }
+    .screenshot svg { display: block; width: 100%; height: auto; }
 
     /* Stats */
     .stats {
@@ -254,42 +210,129 @@
     </div>
 
     <div class="screenshot">
-      <div class="screenshot-bar">
-        <div class="dot dot-red"></div>
-        <div class="dot dot-yellow"></div>
-        <div class="dot dot-green"></div>
-      </div>
-      <div class="screenshot-body">
-        <div class="screenshot-sidebar">
-          <div class="sb-item"></div>
-          <div class="sb-item"></div>
-          <div class="sb-item"></div>
-          <div class="sb-item"></div>
-          <div class="sb-item"></div>
-        </div>
-        <div class="screenshot-main">
-          <div class="scard">
-            <div class="scard-row"></div>
-            <div class="scard-row"></div>
-            <div class="scard-row"></div>
-          </div>
-          <div class="scard scard-flex">
-            <div class="scard-icon"></div>
-            <div class="scard-content">
-              <div class="scard-sm"></div>
-              <div class="scard-badge-row">
-                <div class="badge badge-vst"></div>
-                <div class="badge badge-vst3"></div>
-                <div class="badge badge-au"></div>
-              </div>
-            </div>
-          </div>
-          <div class="scard scard-pie">
-            <div class="pie-block"></div>
-            <div class="pie-block"></div>
-          </div>
-        </div>
-      </div>
+      <svg viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg">
+        <!-- Window chrome -->
+        <rect width="800" height="480" fill="#161b22"/>
+        <!-- Title bar -->
+        <rect width="800" height="36" fill="#1c2128"/>
+        <circle cx="22" cy="18" r="6" fill="#ff5f57"/>
+        <circle cx="42" cy="18" r="6" fill="#febc2e"/>
+        <circle cx="62" cy="18" r="6" fill="#28c840"/>
+        <text x="400" y="23" text-anchor="middle" fill="#8b949e" font-size="11" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Oh My Music Studio</text>
+        <!-- Header bar -->
+        <rect x="0" y="36" width="800" height="50" fill="#21262d"/>
+        <text x="16" y="68" fill="#e6edf3" font-size="16" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,sans-serif">OMS</text>
+        <rect x="700" y="50" width="84" height="22" rx="11" fill="#30363d"/>
+        <text x="742" y="65" text-anchor="middle" fill="#8b949e" font-size="10" font-family="-apple-system,BlinkMacSystemFont,sans-serif">v1.1.3</text>
+
+        <!-- Sidebar -->
+        <rect x="0" y="86" width="170" height="394" fill="#0d1117"/>
+        <rect x="12" y="102" width="146" height="32" rx="6" fill="rgba(232,106,23,0.15)" stroke="rgba(232,106,23,0.4)" stroke-width="1"/>
+        <rect x="20" y="110" width="16" height="16" rx="3" fill="#e86a17"/>
+        <text x="44" y="123" fill="#e6edf3" font-size="11" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Hardware</text>
+
+        <rect x="12" y="142" width="146" height="32" rx="6" fill="transparent"/>
+        <text x="44" y="163" fill="#8b949e" font-size="11" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Plugins</text>
+
+        <rect x="12" y="182" width="146" height="32" rx="6" fill="transparent"/>
+        <text x="44" y="203" fill="#8b949e" font-size="11" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Charts</text>
+
+        <!-- Divider line -->
+        <line x1="0" y1="230" x2="170" y2="230" stroke="#30363d" stroke-width="1"/>
+
+        <!-- DAW section in sidebar -->
+        <text x="12" y="252" fill="#6e7681" font-size="10" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,sans-serif" letter-spacing="0.05em">DAWs</text>
+        <rect x="12" y="260" width="146" height="26" rx="4" fill="#30363d"/>
+        <rect x="20" y="266" width="14" height="14" rx="3" fill="#f0883e"/>
+        <text x="42" y="278" fill="#e6edf3" font-size="10" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Logic Pro</text>
+
+        <rect x="12" y="292" width="146" height="26" rx="4" fill="#30363d"/>
+        <rect x="20" y="298" width="14" height="14" rx="3" fill="#8B5CF6"/>
+        <text x="42" y="310" fill="#e6edf3" font-size="10" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Ableton Live</text>
+
+        <!-- Main content area -->
+        <!-- Section: System Info -->
+        <text x="190" y="116" fill="#e6edf3" font-size="13" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,sans-serif">System Information</text>
+        <rect x="190" y="126" width="590" height="72" rx="8" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+
+        <!-- System info cards -->
+        <rect x="200" y="136" width="125" height="52" rx="6" fill="#161b22"/>
+        <text x="200" y="155" fill="#6e7681" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">PLATFORM</text>
+        <text x="200" y="173" fill="#e6edf3" font-size="13" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,sans-serif">macOS</text>
+
+        <rect x="335" y="136" width="125" height="52" rx="6" fill="#161b22"/>
+        <text x="335" y="155" fill="#6e7681" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">CPU</text>
+        <text x="335" y="173" fill="#e6edf3" font-size="11" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Apple M2 Pro</text>
+
+        <rect x="470" y="136" width="125" height="52" rx="6" fill="#161b22"/>
+        <text x="470" y="155" fill="#6e7681" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">MEMORY</text>
+        <text x="470" y="173" fill="#e6edf3" font-size="13" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,sans-serif">12.0 GB</text>
+
+        <rect x="605" y="136" width="165" height="52" rx="6" fill="#161b22"/>
+        <text x="605" y="155" fill="#6e7681" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">UPTIME</text>
+        <text x="605" y="173" fill="#e6edf3" font-size="13" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,sans-serif">4h 32m</text>
+
+        <!-- Summary cards row -->
+        <rect x="190" y="212" width="95" height="58" rx="6" fill="url(#orangeGrad)"/>
+        <text x="190" y="232" fill="rgba(255,255,255,0.7)" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Plugins</text>
+        <text x="190" y="258" fill="white" font-size="20" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,sans-serif">42</text>
+
+        <rect x="295" y="212" width="95" height="58" rx="6" fill="#8B5CF6"/>
+        <text x="295" y="232" fill="rgba(255,255,255,0.7)" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Vendors</text>
+        <text x="295" y="258" fill="white" font-size="20" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,sans-serif">8</text>
+
+        <rect x="400" y="212" width="95" height="58" rx="6" fill="#A855F7"/>
+        <text x="400" y="232" fill="rgba(255,255,255,0.7)" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">DAWs</text>
+        <text x="400" y="258" fill="white" font-size="20" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,sans-serif">3</text>
+
+        <rect x="505" y="212" width="95" height="58" rx="6" fill="#6366f1"/>
+        <text x="505" y="232" fill="rgba(255,255,255,0.7)" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Audio Devices</text>
+        <text x="505" y="258" fill="white" font-size="20" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,sans-serif">5</text>
+
+        <!-- Charts row -->
+        <!-- Format pie chart -->
+        <rect x="190" y="284" width="270" height="180" rx="8" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+        <text x="202" y="306" fill="#e6edf3" font-size="12" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Plugin Formats</text>
+        <!-- Pie chart -->
+        <circle cx="290" cy="400" r="50" fill="#F97316"/>
+        <path d="M 290 350 A 50 50 0 0 1 330 430 Z" fill="#8B5CF6"/>
+        <path d="M 330 430 A 50 50 0 0 1 250 440 Z" fill="#A855F7"/>
+        <path d="M 250 440 A 50 50 0 0 1 290 350 Z" fill="#EF4444"/>
+        <!-- Pie legend -->
+        <rect x="200" y="340" width="8" height="8" rx="2" fill="#F97316"/>
+        <text x="214" y="348" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">AU 18</text>
+        <rect x="200" y="356" width="8" height="8" rx="2" fill="#8B5CF6"/>
+        <text x="214" y="364" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">VST 12</text>
+        <rect x="200" y="372" width="8" height="8" rx="2" fill="#A855F7"/>
+        <text x="214" y="380" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">VST3 8</text>
+        <rect x="200" y="388" width="8" height="8" rx="2" fill="#EF4444"/>
+        <text x="214" y="396" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">AAX 4</text>
+
+        <!-- Vendor bar chart -->
+        <rect x="470" y="284" width="310" height="180" rx="8" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+        <text x="482" y="306" fill="#e6edf3" font-size="12" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Plugins by Vendor</text>
+        <!-- Bar chart bars -->
+        <rect x="482" y="318" width="60" height="10" rx="3" fill="#e86a17"/>
+        <text x="548" y="327" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">FabFilter 12</text>
+        <rect x="482" y="336" width="50" height="10" rx="3" fill="#8B5CF6"/>
+        <text x="548" y="345" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Waves 10</text>
+        <rect x="482" y="354" width="40" height="10" rx="3" fill="#A855F7"/>
+        <text x="548" y="363" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">iZotope 8</text>
+        <rect x="482" y="372" width="30" height="10" rx="3" fill="#6366f1"/>
+        <text x="548" y="381" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Arturia 6</text>
+        <rect x="482" y="390" width="25" height="10" rx="3" fill="#06b6d4"/>
+        <text x="548" y="399" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Valhalla 5</text>
+        <rect x="482" y="408" width="20" height="10" rx="3" fill="#22c55e"/>
+        <text x="548" y="417" fill="#8b949e" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">Other 1</text>
+
+        <!-- Definitions -->
+        <defs>
+          <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#e86a17"/>
+            <stop offset="100%" stop-color="#f0883e"/>
+          </linearGradient>
+        </defs>
+      </svg>
     </div>
 
     <div class="stats">

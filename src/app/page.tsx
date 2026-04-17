@@ -69,6 +69,8 @@ export default function Home() {
   const [hardwareLoaded, setHardwareLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+  const [updateDownloading, setUpdateDownloading] = useState(false);
 
   const t = useCallback((key: TranslationKey): string => {
     return translations[lang][key];
@@ -98,6 +100,14 @@ export default function Home() {
     window.electronAPI.scanHardware().then((hw) => {
       setHardware(hw);
       setHardwareLoaded(true);
+    });
+
+    window.electronAPI.onUpdateAvailable((info) => {
+      setUpdateVersion(info.version);
+    });
+
+    window.electronAPI.onUpdateDownloaded(() => {
+      setUpdateDownloading(false);
     });
   }, []);
 
@@ -321,6 +331,46 @@ export default function Home() {
         </div>
       </header>
 
+      {updateVersion && (
+        <div className={styles.updateBanner}>
+          <span>
+            {lang === 'zh'
+              ? `发现新版本 v${updateVersion}，点击下载`
+              : `New version v${updateVersion} available`}
+          </span>
+          <div className={styles.updateBannerActions}>
+            {updateDownloading ? (
+              <span className={styles.updateDownloading}>
+                {lang === 'zh' ? '下载中…' : 'Downloading…'}
+              </span>
+            ) : (
+              <button
+                className={styles.updateDownloadBtn}
+                onClick={async () => {
+                  setUpdateDownloading(true);
+                  await window.electronAPI.downloadUpdate();
+                }}
+              >
+                {lang === 'zh' ? '下载' : 'Download'}
+              </button>
+            )}
+            <button
+              className={styles.updateReleaseBtn}
+              onClick={() => window.electronAPI.openReleasePage()}
+            >
+              {lang === 'zh' ? 'Releases' : 'Releases'}
+            </button>
+            <button
+              className={styles.updateDismissBtn}
+              onClick={() => setUpdateVersion(null)}
+              title={lang === 'zh' ? '关闭' : 'Dismiss'}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       <main className={styles.main}>
         <HardwarePanel
           hardware={hardware}
@@ -498,6 +548,10 @@ export default function Home() {
         writePdfFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
         onSoftwareUpdate: (callback: (software: MusicSoftware[]) => void) => void;
         onHardwareUpdate: (callback: (hardware: HardwareInfo) => void) => void;
+        onUpdateAvailable: (callback: (info: { version: string }) => void) => void;
+        onUpdateDownloaded: (callback: (info: { version: string }) => void) => void;
+        downloadUpdate: () => Promise<void>;
+        openReleasePage: () => void;
       };
     }
 }

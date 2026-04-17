@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -6,6 +6,7 @@ import * as http from 'http';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
 import { scanMusicSoftware, type MusicSoftware } from './services/software-detector';
 import { detectAllHardware } from './services/audio-detector';
 
@@ -18,6 +19,42 @@ log.info('Application starting...');
 
 let mainWindow: BrowserWindow | null = null;
 let softwareList: MusicSoftware[] = [];
+
+function initAutoUpdater(): void {
+  autoUpdater.logger = log;
+  autoUpdater.autoDownload = false;
+
+  autoUpdater.on('checking-for-update', () => {
+    log.info('[AutoUpdater] Checking for updates...');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    log.info(`[AutoUpdater] Update available: ${info.version}`);
+    mainWindow?.webContents.send('update:available', {
+      version: info.version,
+      releaseNotes: info.releaseNotes,
+    });
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    log.info('[AutoUpdater] No update available');
+  });
+
+  autoUpdater.on('error', (err) => {
+    log.warn('[AutoUpdater] Error:', err.message);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    log.info(`[AutoUpdater] Update downloaded: ${info.version}`);
+    mainWindow?.webContents.send('update:downloaded', { version: info.version });
+  });
+
+  if (!isDev) {
+    autoUpdater.checkForUpdates().catch((err) => {
+      log.warn('[AutoUpdater] Check failed:', err.message);
+    });
+  }
+}
 
 const isDev = !app.isPackaged;
 
@@ -286,10 +323,41 @@ ipcMain.handle('dialog:show-save', async (_event, {
   return result.canceled ? null : result.filePath;
 });
 
+ipcMain.handle('update:download', async () => {
+  try {
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+});
+
+ipcMain.handle('update:install', () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
+ipcMain.handle('update:openRelease', () => {
+  shell.openExternal('https://github.com/yzykevin/oh_my_music_studio/releases');
+});
+
+ipcMain.handle('update:check', async () => {
+  if (isDev) return { available: false };
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    return {
+      available: !!result?.updateInfo,
+      version: result?.updateInfo?.version,
+    };
+  } catch {
+    return { available: false };
+  }
+});
+
 app.whenReady().then(() => {
   log.info('App is ready');
   startBackgroundScans();
   createWindow();
+  initAutoUpdater();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

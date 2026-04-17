@@ -56,6 +56,15 @@ const electronAPI = {
   onHardwareUpdate: (callback: (hardware: HardwareInfo) => void) => {
     ipcRenderer.on('hardware:update', (_event, hardware) => callback(hardware));
   },
+  onUpdateAvailable: (callback: (info: { version: string }) => void) => {
+    ipcRenderer.on('update:available', (_event, info) => callback(info));
+  },
+  onUpdateDownloaded: (callback: (info: { version: string }) => void) => {
+    ipcRenderer.on('update:downloaded', (_event, info) => callback(info));
+  },
+  downloadUpdate: () => ipcRenderer.invoke('update:download') as Promise<{ success: boolean; error?: string }>,
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  openReleasePage: () => ipcRenderer.invoke('update:openRelease'),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
