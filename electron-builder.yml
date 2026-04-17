@@ -2,6 +2,10 @@ appId: com.ohmyapp.musicstudio
 productName: OMS
 directories:
   output: release
+publish:
+  provider: github
+  owner: yzykevin
+  repo: oh_my_music_studio
 mac:
   target: dmg
   icon: build/icon.icns
