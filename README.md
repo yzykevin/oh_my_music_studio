@@ -1,8 +1,8 @@
 # OMS (Oh My Music Studio)
 
-一款用于分析本地音乐制作工具、系统信息，并通过 Web 前端实时展示的桌面应用。
-
 A desktop application for analyzing local music production tools, system information, with real-time display via a Web frontend.
+
+[**中文介绍 · Chinese README**](README_zh.md)
 
 ---
 
