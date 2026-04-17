@@ -3,6 +3,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  serverExternalPackages: ['@react-pdf/renderer'],
 };
 
 module.exports = process.env.NODE_ENV === 'production'
