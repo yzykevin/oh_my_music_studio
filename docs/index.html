@@ -12,8 +12,8 @@
       --border: #30363d;
       --text: #e6edf3;
       --text-muted: #8b949e;
-      --accent: #8b5cf6;
-      --accent2: #a855f7;
+      --accent: #e86a17;
+      --accent2: #f5a623;
       --green: #3fb950;
       --orange: #f0883e;
     }
@@ -26,36 +26,53 @@
     }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
+
     .container { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
 
     /* Header */
     header {
-      padding: 1.5rem 0;
+      padding: 1.25rem 0;
       border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(8px);
+      z-index: 100;
     }
     .header-inner {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .logo { font-size: 1.1rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
-    .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
-    nav { display: flex; gap: 1.25rem; }
-    nav a { color: var(--text-muted); font-size: 0.9rem; }
+    .logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none !important; }
+    .logo:hover { text-decoration: none !important; }
+    .logo-img { width: 32px; height: 32px; border-radius: 7px; display: block; }
+    .logo-text { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .logo-text span { display: block; font-size: 0.65rem; color: var(--text-muted); font-weight: 400; }
+    nav { display: flex; align-items: center; gap: 0.5rem; }
+    nav a { color: var(--text-muted); font-size: 0.88rem; }
     nav a:hover { color: var(--text); text-decoration: none; }
+    .lang-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .lang-btn:hover { border-color: var(--text-muted); color: var(--text); }
 
     /* Hero */
-    .hero {
-      padding: 5rem 0 4rem;
-      text-align: center;
-    }
+    .hero { padding: 5rem 0 4rem; text-align: center; }
     .hero-badge {
       display: inline-block;
-      background: rgba(139,92,246,0.15);
-      border: 1px solid rgba(139,92,246,0.3);
+      background: rgba(232,106,23,0.12);
+      border: 1px solid rgba(232,106,23,0.3);
       color: var(--accent);
-      font-size: 0.8rem;
-      padding: 0.25rem 0.75rem;
+      font-size: 0.78rem;
+      padding: 0.2rem 0.7rem;
       border-radius: 999px;
       margin-bottom: 1.5rem;
     }
@@ -66,53 +83,52 @@
       margin-bottom: 1rem;
       letter-spacing: -0.03em;
     }
-    .hero h1 span {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .hero p {
-      font-size: 1.15rem;
+    .hero h1 .accent { color: var(--accent); }
+    .hero-sub {
+      font-size: 1.1rem;
       color: var(--text-muted);
-      max-width: 580px;
+      max-width: 560px;
       margin: 0 auto 2.5rem;
     }
-    .hero-actions {
+
+    .download-row {
       display: flex;
       gap: 0.75rem;
       justify-content: center;
       flex-wrap: wrap;
+      margin-bottom: 2.5rem;
     }
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      padding: 0.65rem 1.25rem;
+      padding: 0.6rem 1.2rem;
       border-radius: 8px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
       transition: all 0.15s;
+      text-decoration: none !important;
     }
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
+    .btn:hover { text-decoration: none !important; }
+    .btn-apple {
+      background: var(--text);
+      color: #0d1117;
     }
-    .btn-primary:hover { background: var(--accent2); text-decoration: none; color: #fff; }
-    .btn-outline {
+    .btn-apple:hover { background: #fff; text-decoration: none !important; }
+    .btn-win {
       background: transparent;
       border: 1px solid var(--border);
       color: var(--text);
     }
-    .btn-outline:hover { border-color: var(--text-muted); text-decoration: none; color: var(--text); }
+    .btn-win:hover { border-color: var(--text-muted); color: var(--text); text-decoration: none !important; }
 
-    /* Screenshot mock */
+    /* Screenshot */
     .screenshot {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
-      margin: 3rem 0;
+      margin: 2.5rem 0;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
     .screenshot-bar {
@@ -123,7 +139,7 @@
       gap: 0.4rem;
       border-bottom: 1px solid var(--border);
     }
-    .screenshot-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
     .dot-red { background: #ff5f57; }
     .dot-yellow { background: #febc2e; }
     .dot-green { background: #28c840; }
@@ -132,60 +148,65 @@
       display: grid;
       grid-template-columns: 200px 1fr;
       gap: 1rem;
-      min-height: 280px;
+      min-height: 260px;
     }
     .screenshot-sidebar {
-      background: rgba(139,92,246,0.08);
-      border: 1px solid rgba(139,92,246,0.2);
+      background: rgba(232,106,23,0.06);
+      border: 1px solid rgba(232,106,23,0.18);
       border-radius: 8px;
       padding: 1rem;
     }
-    .screenshot-sidebar-item {
-      height: 10px;
-      border-radius: 4px;
-      margin-bottom: 8px;
-    }
-    .screenshot-main {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-    .screenshot-card {
-      background: rgba(255,255,255,0.03);
+    .sb-item { height: 8px; border-radius: 4px; margin-bottom: 9px; background: rgba(255,255,255,0.07); }
+    .sb-item:first-child { width: 75%; background: rgba(232,106,23,0.3); margin-bottom: 12px; height: 10px; }
+    .sb-item:nth-child(2) { width: 55%; }
+    .sb-item:nth-child(3) { width: 65%; }
+    .sb-item:nth-child(4) { width: 45%; }
+    .sb-item:nth-child(5) { width: 60%; margin-bottom: 0; }
+    .screenshot-main { display: flex; flex-direction: column; gap: 0.75rem; }
+    .scard {
+      background: rgba(255,255,255,0.025);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 1rem;
     }
-    .screenshot-card-label {
-      height: 8px;
-      width: 60%;
-      background: rgba(255,255,255,0.08);
-      border-radius: 4px;
-      margin-bottom: 0.5rem;
-    }
-    .screenshot-card-row {
-      height: 8px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 4px;
-    }
-    .screenshot-badge-row {
+    .scard-row { height: 7px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 6px; }
+    .scard-row:last-child { margin-bottom: 0; }
+    .scard-row:nth-child(1) { width: 75%; }
+    .scard-row:nth-child(2) { width: 55%; }
+    .scard-row:nth-child(3) { width: 65%; }
+    .scard-badge-row { display: flex; gap: 0.35rem; margin-top: 6px; }
+    .badge { height: 18px; width: 42px; border-radius: 4px; }
+    .badge-vst { background: #8B5CF6; }
+    .badge-vst3 { background: #A855F7; }
+    .badge-au { background: #F97316; }
+    .scard-flex { display: flex; gap: 0.75rem; align-items: center; }
+    .scard-icon { width: 44px; height: 44px; border-radius: 8px; background: rgba(232,106,23,0.18); flex-shrink: 0; }
+    .scard-content { flex: 1; }
+    .scard-sm { height: 6px; width: 45%; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 5px; }
+    .scard-pie { display: flex; gap: 0.5rem; flex: 1; }
+    .pie-block { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 6px; }
+
+    /* Stats */
+    .stats {
       display: flex;
-      gap: 0.4rem;
-      margin-top: 0.5rem;
+      justify-content: center;
+      gap: 3rem;
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin: 0 0 3rem;
     }
-    .screenshot-badge {
-      height: 18px;
-      width: 40px;
-      border-radius: 4px;
-    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 0.78rem; color: var(--text-muted); }
 
     /* Features */
-    .features { padding: 4rem 0; }
+    .features { padding: 3rem 0; }
     .section-title {
       text-align: center;
-      font-size: 1.75rem;
+      font-size: 1.6rem;
       font-weight: 700;
-      margin-bottom: 3rem;
+      margin-bottom: 2.5rem;
     }
     .features-grid {
       display: grid;
@@ -196,41 +217,28 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 1.25rem;
+      padding: 1.2rem;
       transition: border-color 0.15s;
     }
-    .feature-card:hover { border-color: rgba(139,92,246,0.5); }
+    .feature-card:hover { border-color: rgba(232,106,23,0.4); }
     .feature-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 0.75rem;
-      font-size: 1.1rem;
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 0.7rem; font-size: 1rem;
     }
-    .icon-purple { background: rgba(139,92,246,0.15); }
-    .icon-green { background: rgba(63,185,80,0.15); }
-    .icon-orange { background: rgba(240,136,62,0.15); }
-    .feature-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
-    .feature-card p { font-size: 0.85rem; color: var(--text-muted); }
+    .icon-p { background: rgba(232,106,23,0.15); }
+    .icon-g { background: rgba(63,185,80,0.15); }
+    .icon-o { background: rgba(240,136,62,0.15); }
+    .feature-card h3 { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .feature-card p { font-size: 0.83rem; color: var(--text-muted); }
 
     /* Tech */
-    .tech { padding: 3rem 0; border-top: 1px solid var(--border); }
-    .tech-grid {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
+    .tech { padding: 2.5rem 0; border-top: 1px solid var(--border); }
+    .tech-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.6rem; }
     .tech-tag {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.35rem 0.85rem;
-      font-size: 0.85rem;
-      color: var(--text-muted);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.3rem 0.8rem;
+      font-size: 0.82rem; color: var(--text-muted);
     }
 
     /* Footer */
@@ -239,26 +247,14 @@
       padding: 2rem 0;
       text-align: center;
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
     }
+    footer p { margin-bottom: 0.35rem; }
     footer a { color: var(--text-muted); }
 
-    /* Stats */
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 3rem;
-      padding: 2rem 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      margin: 2rem 0;
-    }
-    .stat { text-align: center; }
-    .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
-    .stat-label { font-size: 0.8rem; color: var(--text-muted); }
-
-    /* Divider */
-    .divider { height: 1px; background: var(--border); margin: 2rem 0; }
+    /* Bilingual — ZH hidden by default */
+    [lang=en] .zh { display: none; }
+    [lang=zh] .en { display: none; }
 
     @media (max-width: 640px) {
       .hero h1 { font-size: 2rem; }
@@ -268,160 +264,187 @@
     }
   </style>
 </head>
-<body>
+<body lang="en">
 
 <header>
   <div class="container header-inner">
-    <div class="logo">
-      <div class="logo-icon">🎛</div>
-      OMS
-    </div>
+    <a href="#" class="logo">
+      <img src="icon.png" alt="OMS" class="logo-img" />
+      <div class="logo-text">
+        OMS
+        <span>Oh My Music Studio</span>
+      </div>
+    </a>
     <nav>
-      <a href="#features">Features</a>
-      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank">Downloads</a>
-      <a href="https://github.com/yzykevin/oh_my_music_studio" target="_blank">GitHub</a>
+      <a href="#features" class="en">Features</a>
+      <a href="#features" class="zh">功能特性</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="en">Downloads</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="zh">下载</a>
+      <button class="lang-btn" onclick="toggleLang()">中文</button>
     </nav>
   </div>
 </header>
 
 <section class="hero">
   <div class="container">
-    <div class="hero-badge">Open Source · macOS &amp; Windows</div>
-    <h1>Know Your <span>Music Studio</span></h1>
-    <p>A desktop application that scans and analyzes your installed music production tools, plugins, and system information — all in one place.</p>
-    <div class="hero-actions">
-      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="btn btn-primary">
-        ↓ Download for macOS
+    <div class="hero-badge en">Open Source · macOS &amp; Windows</div>
+    <div class="hero-badge zh">开源 · macOS 和 Windows</div>
+
+    <h1>
+      <span class="en">Know Your <span class="accent">Music Studio</span></span>
+      <span class="zh">了解你的<span class="accent">音乐工作站</span></span>
+    </h1>
+
+    <p class="hero-sub">
+      <span class="en">A desktop app that scans and analyzes your installed music production tools, plugins, and system info — all in one place.</span>
+      <span class="zh">一款桌面应用，扫描并分析你已安装的音乐制作工具、插件和系统信息，全部集中在一处。</span>
+    </p>
+
+    <div class="download-row">
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases/download/v1.1.3/OMS-1.1.3-arm64.dmg" class="btn btn-apple">
+        🍎 <span class="en">Download for macOS</span><span class="zh">下载 macOS 版</span>
       </a>
-      <a href="https://github.com/yzykevin/oh_my_music_studio" target="_blank" class="btn btn-outline">
-        ★ View on GitHub
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases/download/v1.1.3/OMS.Setup.1.1.3.exe" class="btn btn-win">
+        🪟 <span class="en">Download for Windows</span><span class="zh">下载 Windows 版</span>
       </a>
     </div>
 
     <div class="screenshot">
       <div class="screenshot-bar">
-        <div class="screenshot-dot dot-red"></div>
-        <div class="screenshot-dot dot-yellow"></div>
-        <div class="screenshot-dot dot-green"></div>
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
       </div>
       <div class="screenshot-body">
         <div class="screenshot-sidebar">
-          <div class="screenshot-sidebar-item" style="width:80%; background: rgba(139,92,246,0.3)"></div>
-          <div class="screenshot-sidebar-item" style="width:60%"></div>
-          <div class="screenshot-sidebar-item" style="width:70%"></div>
-          <div class="screenshot-sidebar-item" style="width:50%"></div>
-          <div class="screenshot-sidebar-item" style="width:65%"></div>
+          <div class="sb-item"></div>
+          <div class="sb-item"></div>
+          <div class="sb-item"></div>
+          <div class="sb-item"></div>
+          <div class="sb-item"></div>
         </div>
         <div class="screenshot-main">
-          <div class="screenshot-card">
-            <div class="screenshot-card-label"></div>
-            <div class="screenshot-card-row" style="width:80%"></div>
-            <div class="screenshot-card-row" style="width:60%"></div>
-            <div class="screenshot-card-row" style="width:70%"></div>
+          <div class="scard">
+            <div class="scard-row"></div>
+            <div class="scard-row"></div>
+            <div class="scard-row"></div>
           </div>
-          <div class="screenshot-card" style="display:flex;gap:1rem;flex-direction:row;align-items:center">
-            <div style="width:48px;height:48px;border-radius:8px;background:rgba(139,92,246,0.2);flex-shrink:0"></div>
-            <div style="flex:1">
-              <div class="screenshot-card-row" style="width:50%;margin-bottom:6px"></div>
-              <div class="screenshot-badge-row">
-                <div class="screenshot-badge" style="background:#8B5CF6"></div>
-                <div class="screenshot-badge" style="background:#A855F7"></div>
-                <div class="screenshot-badge" style="background:#F97316"></div>
+          <div class="scard scard-flex">
+            <div class="scard-icon"></div>
+            <div class="scard-content">
+              <div class="scard-sm"></div>
+              <div class="scard-badge-row">
+                <div class="badge badge-vst"></div>
+                <div class="badge badge-vst3"></div>
+                <div class="badge badge-au"></div>
               </div>
             </div>
           </div>
-          <div class="screenshot-card" style="display:flex;gap:0.5rem">
-            <div style="flex:1;height:80px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid var(--border)"></div>
-            <div style="flex:1;height:80px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid var(--border)"></div>
+          <div class="scard scard-pie">
+            <div class="pie-block"></div>
+            <div class="pie-block"></div>
           </div>
         </div>
       </div>
     </div>
 
     <div class="stats">
-      <div class="stat">
-        <div class="stat-num">4</div>
-        <div class="stat-label">Plugin Formats</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">VST</div>
-        <div class="stat-label">VST3 · AU · AAX</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">10+</div>
-        <div class="stat-label">DAWs Supported</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">30+</div>
-        <div class="stat-label">Plugin Vendors</div>
-      </div>
+      <div class="stat"><div class="stat-num">4</div><div class="stat-label en">Plugin Formats</div><div class="stat-label zh">插件格式</div></div>
+      <div class="stat"><div class="stat-num">10+</div><div class="stat-label en">DAWs Supported</div><div class="stat-label zh">支持的 DAW</div></div>
+      <div class="stat"><div class="stat-num">30+</div><div class="stat-label en">Plugin Vendors</div><div class="stat-label zh">插件厂商</div></div>
+      <div class="stat"><div class="stat-num">~80MB</div><div class="stat-label en">App Size</div><div class="stat-label zh">应用大小</div></div>
     </div>
   </div>
 </section>
 
 <section class="features" id="features">
   <div class="container">
-    <h2 class="section-title">Features</h2>
+    <h2 class="section-title en">Features</h2>
+    <h2 class="section-title zh">功能特性</h2>
     <div class="features-grid">
       <div class="feature-card">
-        <div class="feature-icon icon-purple">💻</div>
-        <h3>System Information</h3>
-        <p>Real-time display of platform, CPU, memory, and uptime.</p>
+        <div class="feature-icon icon-p">💻</div>
+        <h3 class="en">System Information</h3>
+        <h3 class="zh">系统信息</h3>
+        <p class="en">Real-time display of platform, CPU, memory, and uptime.</p>
+        <p class="zh">实时显示平台、CPU、内存和运行时长。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-purple">🎹</div>
-        <h3>DAW Detection</h3>
-        <p>Auto-detect installed Digital Audio Workstations — Logic, Ableton, Pro Tools, Cubase, and more.</p>
+        <div class="feature-icon icon-p">🎹</div>
+        <h3 class="en">DAW Detection</h3>
+        <h3 class="zh">DAW 检测</h3>
+        <p class="en">Auto-detect Logic, Ableton, Pro Tools, Cubase, Reaper, and more.</p>
+        <p class="zh">自动识别 Logic、Ableton、Pro Tools、Cubase、Reaper 等 DAW。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-purple">🔌</div>
-        <h3>Plugin Scanning</h3>
-        <p>Scan VST, VST3, AU, AAX plugins. Same plugin in multiple formats auto-merged into one entry.</p>
+        <div class="feature-icon icon-p">🔌</div>
+        <h3 class="en">Plugin Scanning</h3>
+        <h3 class="zh">插件扫描</h3>
+        <p class="en">Scan VST, VST3, AU, AAX. Same plugin in multiple formats merged into one entry.</p>
+        <p class="zh">扫描 VST、VST3、AU、AAX，同名插件多格式自动合并为一条。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-purple">🏭</div>
-        <h3>Vendor Grouping</h3>
-        <p>Plugins grouped by vendor with one-click expand/collapse. Quick search and format filter.</p>
+        <div class="feature-icon icon-p">🏭</div>
+        <h3 class="en">Vendor Grouping</h3>
+        <h3 class="zh">厂商分组</h3>
+        <p class="en">Plugins grouped by vendor. Quick search and format filter.</p>
+        <p class="zh">按厂商分组展示，支持搜索和格式过滤。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-green">🔊</div>
-        <h3>Hardware Panel</h3>
-        <p>Audio devices, MIDI devices, Bluetooth audio, running DAWs, and login items.</p>
+        <div class="feature-icon icon-g">🔊</div>
+        <h3 class="en">Hardware Panel</h3>
+        <h3 class="zh">硬件面板</h3>
+        <p class="en">Audio devices, MIDI, Bluetooth audio, running DAWs, and login items.</p>
+        <p class="zh">音频设备、MIDI、蓝牙音频、运行中的 DAW、开机启动项。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-green">📡</div>
-        <h3>Driver Detection</h3>
-        <p>Display audio interface driver status and configuration.</p>
+        <div class="feature-icon icon-g">📡</div>
+        <h3 class="en">Driver Detection</h3>
+        <h3 class="zh">驱动检测</h3>
+        <p class="en">Display audio interface driver status and configuration.</p>
+        <p class="zh">显示音频接口驱动状态和配置。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-orange">🔑</div>
-        <h3>iLok Support</h3>
-        <p>Detect iLok License Manager installation status.</p>
+        <div class="feature-icon icon-o">🔑</div>
+        <h3 class="en">iLok Support</h3>
+        <h3 class="zh">iLok 支持</h3>
+        <p class="en">Detect iLok License Manager installation.</p>
+        <p class="zh">检测 iLok License Manager 是否安装。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-orange">📊</div>
-        <h3>Plugin Analytics</h3>
-        <p>Visualize plugin format distribution and vendor breakdown with interactive charts.</p>
+        <div class="feature-icon icon-o">📊</div>
+        <h3 class="en">Plugin Analytics</h3>
+        <h3 class="zh">插件分析</h3>
+        <p class="en">Visualize format distribution and vendor breakdown with interactive charts.</p>
+        <p class="zh">交互式图表展示插件格式分布和厂商占比。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-orange">📄</div>
-        <h3>Report Export</h3>
-        <p>Export your full software scan as JSON or PDF for documentation.</p>
+        <div class="feature-icon icon-o">📄</div>
+        <h3 class="en">Report Export</h3>
+        <h3 class="zh">报告导出</h3>
+        <p class="en">Export full software scan as JSON or PDF.</p>
+        <p class="zh">将扫描结果导出为 JSON 或 PDF 格式。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-orange">🌙</div>
-        <h3>Dark / Light Theme</h3>
-        <p>One-click toggle between dark and light mode.</p>
+        <div class="feature-icon icon-o">🌙</div>
+        <h3 class="en">Dark / Light Theme</h3>
+        <h3 class="zh">深色/浅色主题</h3>
+        <p class="en">One-click toggle between dark and light mode.</p>
+        <p class="zh">一键切换深色和浅色模式。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-purple">🌐</div>
-        <h3>Bilingual UI</h3>
-        <p>Built-in Chinese/English interface toggle. No configuration needed.</p>
+        <div class="feature-icon icon-g">🌐</div>
+        <h3 class="en">Bilingual UI</h3>
+        <h3 class="zh">中英双语</h3>
+        <p class="en">Built-in Chinese/English toggle. No configuration needed.</p>
+        <p class="zh">内置中英文切换，无需任何配置。</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-green">⚡</div>
-        <h3>Parallel Scanning</h3>
-        <p>Software detection runs in parallel — plugins scanned concurrently for faster startup.</p>
+        <div class="feature-icon icon-p">⚡</div>
+        <h3 class="en">Parallel Scanning</h3>
+        <h3 class="zh">并行扫描</h3>
+        <p class="en">Plugins scanned concurrently — faster startup, no UI blocking.</p>
+        <p class="zh">插件并发扫描，秒开不卡顿。</p>
       </div>
     </div>
   </div>
@@ -429,7 +452,8 @@
 
 <section class="tech">
   <div class="container">
-    <h2 class="section-title" style="font-size:1.25rem;margin-bottom:1.5rem">Built with</h2>
+    <h2 class="section-title en" style="font-size:1.2rem;margin-bottom:1.25rem">Built with</h2>
+    <h2 class="section-title zh" style="font-size:1.2rem;margin-bottom:1.25rem">技术栈</h2>
     <div class="tech-grid">
       <span class="tech-tag">Next.js 14</span>
       <span class="tech-tag">React 18</span>
@@ -446,13 +470,24 @@
     <p>
       <a href="https://github.com/yzykevin/oh_my_music_studio" target="_blank">GitHub</a>
       &nbsp;·&nbsp;
-      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank">Releases</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="en">Releases</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio/releases" target="_blank" class="zh">下载</a>
       &nbsp;·&nbsp;
-      <a href="https://github.com/yzykevin/oh_my_music_studio/blob/main/README.md" target="_blank">Documentation</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio/blob/main/README.md" target="_blank" class="en">Documentation</a>
+      <a href="https://github.com/yzykevin/oh_my_music_studio/blob/main/README_zh.md" target="_blank" class="zh">文档</a>
     </p>
-    <p style="margin-top:0.5rem">MIT License · &copy; 2024</p>
+    <p>© 盐蒸鱼 2012–2026 · MIT License</p>
   </div>
 </footer>
+
+<script>
+  function toggleLang() {
+    const html = document.documentElement;
+    const isEn = html.getAttribute('lang') === 'en';
+    html.setAttribute('lang', isEn ? 'zh' : 'en');
+    document.querySelector('.lang-btn').textContent = isEn ? 'English' : '中文';
+  }
+</script>
 
 </body>
 </html>
