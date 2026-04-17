@@ -61,6 +61,9 @@ jobs:
           TAG="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
           FILE=$(ls release/*.dmg | head -1)
           gh release upload "$TAG" "$FILE" --clobber
+          if [ -f release/latest-mac.yml ]; then
+            gh release upload "$TAG" release/latest-mac.yml --clobber
+          fi
 
   build-windows:
     needs: create-release
@@ -89,5 +92,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
-          FILE=$(ls release/*.exe | head -1)
-          gh release upload "$TAG" "$FILE" --clobber
+          cd release
+          for f in *.exe; do
+            [ -f "$f" ] && gh release upload "$TAG" "$f" --clobber && echo "Uploaded $f"
+          done
+          if [ -f latest.yml ]; then
+            gh release upload "$TAG" latest.yml --clobber
+          fi
+          if ! ls *.exe 1>/dev/null 2>&1; then
+            echo "No EXE found, listing all release files:"
+            ls -la
