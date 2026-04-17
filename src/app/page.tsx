@@ -71,6 +71,7 @@ export default function Home() {
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const [updateDownloading, setUpdateDownloading] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   const t = useCallback((key: TranslationKey): string => {
     return translations[lang][key];
@@ -327,6 +328,21 @@ export default function Home() {
           >
             {lang === 'en' ? '中文' : 'EN'}
           </button>
+          <button
+            className={styles.updateCheckBtn}
+            onClick={async () => {
+              setCheckingUpdate(true);
+              const result = await window.electronAPI.checkForUpdate();
+              setCheckingUpdate(false);
+              if (!result.available) {
+                const msg = lang === 'zh' ? '已是最新版本' : 'You are on the latest version';
+                alert(msg);
+              }
+            }}
+            title={lang === 'zh' ? '检查更新' : 'Check for updates'}
+          >
+            {checkingUpdate ? '…' : '↻'}
+          </button>
           <span className={styles.version}>v{version || '…'}</span>
         </div>
       </header>
@@ -552,6 +568,7 @@ export default function Home() {
         onUpdateDownloaded: (callback: (info: { version: string }) => void) => void;
         downloadUpdate: () => Promise<void>;
         openReleasePage: () => void;
+        checkForUpdate: () => Promise<{ available: boolean; version?: string }>;
       };
     }
 }

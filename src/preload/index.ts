@@ -65,6 +65,7 @@ const electronAPI = {
   downloadUpdate: () => ipcRenderer.invoke('update:download') as Promise<{ success: boolean; error?: string }>,
   installUpdate: () => ipcRenderer.invoke('update:install'),
   openReleasePage: () => ipcRenderer.invoke('update:openRelease'),
+  checkForUpdate: () => ipcRenderer.invoke('update:check') as Promise<{ available: boolean; version?: string }>,
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
