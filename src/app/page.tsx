@@ -1,14 +1,23 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import styles from './page.module.css';
 import { translations, type Language, type TranslationKey } from './i18n';
 import { VendorLogo } from './vendor-logos';
 import { HardwarePanel } from './components/HardwarePanel';
 import { SummaryCards } from './components/SummaryCards';
-import { FormatPieChart, VendorBarChart } from './components/Charts';
 import { ExportMenu } from './components/ExportMenu';
 import { useTheme } from './context/ThemeContext';
+
+const FormatPieChart = dynamic(() => import('./components/Charts').then(m => ({ default: m.FormatPieChart })), {
+  ssr: false,
+  loading: () => null,
+});
+const VendorBarChart = dynamic(() => import('./components/Charts').then(m => ({ default: m.VendorBarChart })), {
+  ssr: false,
+  loading: () => null,
+});
 
 interface SystemInfo {
   platform: string;

@@ -433,15 +433,12 @@ async function getPlistInfo(
 async function batchGetArchitectures(
   entries: Array<{ name: string; fullPath: string }>,
 ): Promise<Map<string, Architecture[]>> {
-  // Use `lipo -info` which handles universal binaries in one call per binary
-  // Batch into groups of 20 to avoid command-line length limits
   const result = new Map<string, Architecture[]>();
-  const BATCH = 20;
+  const BATCH = 5;
 
   for (let i = 0; i < entries.length; i += BATCH) {
     const batch = entries.slice(i, i + BATCH);
-    // Run all in parallel within the batch
-      const archResults = await Promise.all(
+    const archResults = await Promise.all(
       batch.map(async (entry): Promise<{ name: string; archs: Architecture[] }> => {
         const macOSDir = path.join(entry.fullPath, 'Contents/MacOS');
         if (!fs.existsSync(macOSDir)) return { name: entry.name, archs: [] };
@@ -466,6 +463,7 @@ async function batchGetArchitectures(
     for (const r of archResults) {
       result.set(r.name, r.archs);
     }
+    await new Promise(resolve => setImmediate(resolve));
   }
   return result;
 }
