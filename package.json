@@ -31,9 +31,6 @@
     "node": ">=18.0.0",
     "electron": ">=39.0.0"
   },
-  "os": [
-    "darwin"
-  ],
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
     "electron-log": "^5.4.3",

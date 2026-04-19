@@ -102,3 +102,4 @@ jobs:
           if ! ls *.exe 1>/dev/null 2>&1; then
             echo "No EXE found, listing all release files:"
             ls -la
+          fi
