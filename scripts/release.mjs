@@ -88,9 +88,9 @@ if (!GH_TOKEN) {
 }
 
 // ─── Check prerequisites ───────────────────────────────────────────────────────
-log('1/7', bold('Checking prerequisites...'));
+log('1/8', bold('Checking prerequisites...'));
 
-run('git fetch --all --tags', { silent: true });
+runOrWarn('git fetch --all --tags', { silent: true });
 
 const tags = run('git tag', { silent: true }).stdout?.trim().split('\n') ?? [];
 if (tags.includes(TAG)) {
@@ -112,7 +112,7 @@ if (branch === 'main' || branch === 'master') {
   console.warn(`  ${dim('Consider creating a release branch instead: git checkout -b release/${VERSION}')}`);
 }
 
-log('1/7', green('✓') + ` Prerequisites OK`);
+log('1/8', green('✓') + ` Prerequisites OK`);
 
 // ─── Update version ───────────────────────────────────────────────────────────
 log('2/8', bold(`Bumping version to ${cyan(VERSION)}...`));
