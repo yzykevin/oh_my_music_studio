@@ -88,9 +88,9 @@ if (!GH_TOKEN) {
 }
 
 // ─── Check prerequisites ───────────────────────────────────────────────────────
-log('1/7', bold('Checking prerequisites...'));
+log('1/8', bold('Checking prerequisites...'));
 
-run('git fetch --all --tags', { silent: true });
+runOrWarn('git fetch --all --tags', { silent: true });
 
 const tags = run('git tag', { silent: true }).stdout?.trim().split('\n') ?? [];
 if (tags.includes(TAG)) {
@@ -112,7 +112,7 @@ if (branch === 'main' || branch === 'master') {
   console.warn(`  ${dim('Consider creating a release branch instead: git checkout -b release/${VERSION}')}`);
 }
 
-log('1/7', green('✓') + ` Prerequisites OK`);
+log('1/8', green('✓') + ` Prerequisites OK`);
 
 // ─── Update version ───────────────────────────────────────────────────────────
 log('2/8', bold(`Bumping version to ${cyan(VERSION)}...`));
@@ -170,9 +170,15 @@ docsHtml = docsHtml.replace(
 writeFileSync(docsPath, docsHtml, 'utf-8');
 log('3/8', green('✓') + ` Updated download URLs to v${VERSION}`);
 
-run(`git add package.json docs/index.html`);
-run(`git commit -m "chore: bump version to ${VERSION}"`);
-log('4/8', green('✓') + ` ${oldVersion} → ${VERSION}`);
+// Only commit if there are changes
+const changedFiles = exec(`git status --porcelain`).trim();
+if (changedFiles) {
+  run(`git add package.json docs/index.html`);
+  run(`git commit -m "chore: bump version to ${VERSION}"`);
+  log('4/8', green('✓') + ` ${oldVersion} → ${VERSION}`);
+} else {
+  log('4/8', yellow('—') + ` No changes to commit (already at ${VERSION})`);
+}
 
 // ─── Build macOS DMG ─────────────────────────────────────────────────────────
 log('4/8', bold('Building macOS DMG...'));
