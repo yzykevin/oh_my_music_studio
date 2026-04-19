@@ -170,9 +170,15 @@ docsHtml = docsHtml.replace(
 writeFileSync(docsPath, docsHtml, 'utf-8');
 log('3/8', green('✓') + ` Updated download URLs to v${VERSION}`);
 
-run(`git add package.json docs/index.html`);
-run(`git commit -m "chore: bump version to ${VERSION}"`);
-log('4/8', green('✓') + ` ${oldVersion} → ${VERSION}`);
+// Only commit if there are changes
+const changedFiles = exec(`git status --porcelain`).trim();
+if (changedFiles) {
+  run(`git add package.json docs/index.html`);
+  run(`git commit -m "chore: bump version to ${VERSION}"`);
+  log('4/8', green('✓') + ` ${oldVersion} → ${VERSION}`);
+} else {
+  log('4/8', yellow('—') + ` No changes to commit (already at ${VERSION})`);
+}
 
 // ─── Build macOS DMG ─────────────────────────────────────────────────────────
 log('4/8', bold('Building macOS DMG...'));
