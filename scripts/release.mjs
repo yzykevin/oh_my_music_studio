@@ -115,7 +115,7 @@ if (branch === 'main' || branch === 'master') {
 log('1/7', green('✓') + ` Prerequisites OK`);
 
 // ─── Update version ───────────────────────────────────────────────────────────
-log('2/7', bold(`Bumping version to ${cyan(VERSION)}...`));
+log('2/8', bold(`Bumping version to ${cyan(VERSION)}...`));
 
 const pkgPath = join(ROOT, 'package.json');
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
@@ -129,12 +129,53 @@ if (existsSync(releaseNotesPath)) {
   releaseBody = readFileSync(releaseNotesPath, 'utf-8');
 }
 
-run(`git add package.json`);
+// ─── Update docs/index.html version links ──────────────────────────────────
+log('3/8', bold('Updating docs/index.html download links...'));
+
+const docsPath = join(ROOT, 'docs', 'index.html');
+let docsHtml = readFileSync(docsPath, 'utf-8');
+
+const githubBase = 'https://github.com/yzykevin/oh_my_music_studio/releases/download';
+const dmgFileName = `OMS-${VERSION}-arm64.dmg`;
+const exeFileName = `OMS.Setup.${VERSION}.exe`;
+const dmgUrl = `${githubBase}/v${VERSION}/${dmgFileName}`;
+const exeUrl = `${githubBase}/v${VERSION}/${exeFileName}`;
+
+// Update static download links (href attribute)
+docsHtml = docsHtml.replace(
+  /href="https:\/\/github\.com\/yzykevin\/oh_my_music_studio\/releases\/download\/[^"]+\/OMS-[^"]+\.dmg"/g,
+  `href="${dmgUrl}"`
+);
+docsHtml = docsHtml.replace(
+  /href="https:\/\/github\.com\/yzykevin\/oh_my_music_studio\/releases\/download\/[^"]+\/OMS\.[^"]+\.exe"/g,
+  `href="${exeUrl}"`
+);
+
+// Update JS download URLs
+docsHtml = docsHtml.replace(
+  /btnPrimary\.href = 'https:\/\/github\.com\/yzykevin\/oh_my_music_studio\/releases\/download\/[^']+\/OMS-[^']+\.dmg'/g,
+  `btnPrimary.href = '${dmgUrl}'`
+);
+docsHtml = docsHtml.replace(
+  /btnPrimary\.href = 'https:\/\/github\.com\/yzykevin\/oh_my_music_studio\/releases\/download\/[^']+\/OMS\.[^']+\.exe'/g,
+  `btnPrimary.href = '${exeUrl}'`
+);
+
+// Update SVG version badge (e.g. v1.1.5)
+docsHtml = docsHtml.replace(
+  />(v\d+\.\d+\.\d+)<\/text>/g,
+  `>v${VERSION}</text>`
+);
+
+writeFileSync(docsPath, docsHtml, 'utf-8');
+log('3/8', green('✓') + ` Updated download URLs to v${VERSION}`);
+
+run(`git add package.json docs/index.html`);
 run(`git commit -m "chore: bump version to ${VERSION}"`);
-log('2/7', green('✓') + ` ${oldVersion} → ${VERSION}`);
+log('4/8', green('✓') + ` ${oldVersion} → ${VERSION}`);
 
 // ─── Build macOS DMG ─────────────────────────────────────────────────────────
-log('3/7', bold('Building macOS DMG...'));
+log('4/8', bold('Building macOS DMG...'));
 
 if (!existsSync(join(ROOT, 'build', 'icon.icns'))) {
   console.error(`${red('✖')} build/icon.icns not found. Run ${dim('node build/generate-icon.mjs')} first.`);
@@ -163,22 +204,22 @@ if (!dmgFile || !existsSync(dmgFile)) {
   process.exit(1);
 }
 
-log('3/7', green('✓') + ` ${dmgFile}`);
+log('4/8', green('✓') + ` ${dmgFile}`);
 
 // ─── Tag & push ────────────────────────────────────────────────────────────────
-log('4/7', bold('Creating git tag...'));
+log('5/8', bold('Creating git tag...'));
 run(`git tag -a ${TAG} -m "Release ${TAG}"`);
-log('4/7', green('✓') + ` Tagged ${TAG}`);
-log('4/7', bold('Pushing to remote...'));
+log('5/8', green('✓') + ` Tagged ${TAG}`);
+log('5/8', bold('Pushing to remote...'));
 run(`git push origin ${TAG}`);
 run(`git push origin HEAD`);
-log('4/7', green('✓') + ` Pushed`);
+log('5/8', green('✓') + ` Pushed`);
 
 // ─── Get commit SHA for release ────────────────────────────────────────────────
 const sha = run('git rev-parse HEAD', { silent: true }).stdout?.trim() ?? '';
 
 // ─── Create GitHub Release ──────────────────────────────────────────────────────
-log('5/7', bold('Creating GitHub Release...'));
+log('6/8', bold('Creating GitHub Release...'));
 
 // Detect repo from git remote
 const remoteUrl = run('git remote get-url origin', { silent: true }).stdout?.trim() ?? '';
@@ -200,7 +241,7 @@ try {
 
   if (existingId) {
     releaseId = existingId;
-    log('5/7', green('✓') + ` Release ${TAG} already exists`);
+    log('6/8', green('✓') + ` Release ${TAG} already exists`);
   } else {
     // Write release body to temp file to avoid JSON escaping issues
     const bodyPath = join(ROOT, '.release-body.tmp');
@@ -215,7 +256,7 @@ try {
       throw new Error(`Release ${TAG} was not created successfully`);
     }
 
-    log('5/7', green('✓') + ` Draft release created`);
+    log('6/8', green('✓') + ` Draft release created`);
   }
 } catch (e) {
   console.error(`${red('✖')} Failed to create GitHub release`);
@@ -225,7 +266,7 @@ try {
 }
 
 // ─── Upload DMG ───────────────────────────────────────────────────────────────
-log('6/7', bold('Uploading DMG to release...'));
+log('7/8', bold('Uploading DMG to release...'));
 
 try {
   if (!releaseId) {
@@ -239,7 +280,7 @@ try {
   if (uploadResult.status !== 0) {
     throw new Error(uploadResult.stderr || 'Upload failed');
   }
-  log('6/7', green('✓') + ` DMG uploaded`);
+  log('7/8', green('✓') + ` DMG uploaded`);
 } catch (e) {
   console.warn(`${yellow('⚠')} DMG upload failed: ${e.message}`);
   console.warn(`   Manually: gh release upload "${TAG}" "${dmgFile}"`);
@@ -247,7 +288,7 @@ try {
 }
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
-log('7/7', bold('Done!'));
+log('8/8', bold('Done!'));
 
 console.log(`\n${green('━'.repeat(60))}`);
 console.log(`  ${bold('Release Summary')}`);
