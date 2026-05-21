@@ -219,7 +219,26 @@ log('5/8', green('✓') + ` Tagged ${TAG}`);
 log('5/8', bold('Pushing to remote...'));
 run(`git push origin ${TAG}`);
 run(`git push origin HEAD`);
-log('5/8', green('✓') + ` Pushed`);
+log('5/8', green('✓') + ` Pushed to release branch`);
+
+// ─── Push docs to main for GitHub Pages ────────────────────────────────────
+log('5/8', bold('Pushing docs to main (GitHub Pages)...'));
+run(`git fetch origin main`, { silent: true });
+// Create a temp branch from origin/main, apply docs change, push
+const docsCommit = exec(`git log --oneline -1 -- docs/index.html`).trim().split(' ')[0];
+if (docsCommit) {
+  try {
+    run(`git push origin refs/heads/main:refs/heads/main -f`, { silent: true });
+    run(`git checkout origin/main -b _docs-sync`, { silent: true });
+    run(`git cherry-pick ${docsCommit}`, { silent: true });
+    run(`git push origin _docs-sync:main`, { silent: true });
+    run(`git checkout release_version`, { silent: true });
+    run(`git branch -D _docs-sync`, { silent: true });
+    log('5/8', green('✓') + ` docs synced to main`);
+  } catch {
+    log('5/8', yellow('⚠') + ` docs push to main failed — push docs to main manually`);
+  }
+}
 
 // ─── Get commit SHA for release ────────────────────────────────────────────────
 const sha = run('git rev-parse HEAD', { silent: true }).stdout?.trim() ?? '';

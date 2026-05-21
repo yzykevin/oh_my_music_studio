@@ -34,6 +34,9 @@ export const translations = {
     formatDistribution: 'Format Distribution',
     vendorPlugins: 'Plugins by Vendor',
     items: 'items',
+    openLocation: 'Open',
+    copyPath: 'Copy Path',
+    copiedPath: 'Path copied',
   },
   zh: {
     appTitle: 'OMS',
@@ -70,6 +73,9 @@ export const translations = {
     formatDistribution: '格式分布',
     vendorPlugins: '厂商插件数',
     items: '项',
+    openLocation: '打开位置',
+    copyPath: '复制路径',
+    copiedPath: '路径已复制',
   },
 };
 

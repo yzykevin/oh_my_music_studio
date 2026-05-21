@@ -340,6 +340,25 @@ ipcMain.handle('update:openRelease', () => {
   shell.openExternal('https://github.com/yzykevin/oh_my_music_studio/releases');
 });
 
+ipcMain.handle('plugin:open-path', async (_event, pluginPath: string) => {
+  if (typeof pluginPath !== 'string' || pluginPath.trim().length === 0) {
+    return { success: false, error: 'Invalid plugin path' };
+  }
+
+  const normalizedPath = path.resolve(pluginPath);
+  if (!fs.existsSync(normalizedPath)) {
+    return { success: false, error: 'Plugin path does not exist' };
+  }
+
+  try {
+    shell.showItemInFolder(normalizedPath);
+    return { success: true };
+  } catch (error) {
+    log.error('Failed to open plugin path:', { pluginPath: normalizedPath, error });
+    return { success: false, error: String(error) };
+  }
+});
+
 ipcMain.handle('update:check', async () => {
   if (isDev) return { available: false };
   try {
