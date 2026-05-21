@@ -289,6 +289,8 @@
 .formatIcons {
   display: flex;
   gap: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .formatBadge {
@@ -297,6 +299,59 @@
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
   font-weight: 500;
+}
+
+.formatGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pathActionGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.openPathButton {
+  padding: 0.125rem 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 0.625rem;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: all 0.15s;
+}
+
+.openPathButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.copyPathButton {
+  padding: 0.125rem 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.625rem;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: all 0.15s;
+}
+
+.copyPathButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.copiedHint {
+  margin-top: 0.5rem;
+  color: var(--success);
+  font-size: 0.75rem;
+  word-break: break-all;
 }
 
 .empty {

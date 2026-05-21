@@ -53,6 +53,7 @@ const PLUGIN_TYPE_COLORS: Record<string, string> = {
 
 interface PluginWithFormats extends MusicSoftware {
   formats: string[];
+  pathsByFormat: Partial<Record<'vst' | 'vst3' | 'au' | 'aax', string[]>>;
   isDuplicate?: boolean;
   is32Bit?: boolean;
 }
@@ -72,6 +73,7 @@ export default function Home() {
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const [updateDownloading, setUpdateDownloading] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [copiedHint, setCopiedHint] = useState<string | null>(null);
 
   const t = useCallback((key: TranslationKey): string => {
     return translations[lang][key];
@@ -126,10 +128,23 @@ export default function Home() {
         grouped[key] = {
           ...plugin,
           formats: [plugin.type],
+          pathsByFormat: {},
         };
-      } else {
-        if (!grouped[key].formats.includes(plugin.type)) {
-          grouped[key].formats.push(plugin.type);
+      }
+
+      if (!grouped[key].formats.includes(plugin.type)) {
+        grouped[key].formats.push(plugin.type);
+      }
+
+      if (
+        plugin.type === 'vst' ||
+        plugin.type === 'vst3' ||
+        plugin.type === 'au' ||
+        plugin.type === 'aax'
+      ) {
+        const existingPaths = grouped[key].pathsByFormat[plugin.type] ?? [];
+        if (!existingPaths.includes(plugin.path)) {
+          grouped[key].pathsByFormat[plugin.type] = [...existingPaths, plugin.path];
         }
       }
     }
@@ -222,6 +237,19 @@ export default function Home() {
     setExpandedVendors(newSet);
   };
 
+  const copyPluginPath = useCallback(async (pluginPath: string) => {
+    try {
+      await navigator.clipboard.writeText(pluginPath);
+      setCopiedHint(`${t('copiedPath')}: ${pluginPath}`);
+      setTimeout(() => setCopiedHint(null), 1800);
+    } catch {
+      const errMsg = lang === 'zh'
+        ? `复制失败：${pluginPath}`
+        : `Failed to copy path: ${pluginPath}`;
+      alert(errMsg);
+    }
+  }, [lang, t]);
+
   const renderDawSection = (title: string, items: MusicSoftware[]) => {
     if (items.length === 0) return null;
     return (
@@ -276,15 +304,50 @@ export default function Home() {
                         <span className={styles.riskBadge32} title="32-bit plugin — may not work in modern DAWs">⚠️ 32-bit</span>
                       )}
                       <div className={styles.formatIcons}>
-                        {plugin.formats.map(fmt => (
-                          <span
-                            key={fmt}
-                            className={styles.formatBadge}
-                            style={{ backgroundColor: PLUGIN_TYPE_COLORS[fmt] || '#666' }}
-                          >
-                            {PLUGIN_TYPE_ICONS[fmt] || fmt}
-                          </span>
-                        ))}
+                        {plugin.formats.map(fmt => {
+                          const typedFmt = fmt as 'vst' | 'vst3' | 'au' | 'aax';
+                          const formatPaths = plugin.pathsByFormat[typedFmt] ?? [];
+                          return (
+                            <span key={fmt} className={styles.formatGroup}>
+                              <span
+                                className={styles.formatBadge}
+                                style={{ backgroundColor: PLUGIN_TYPE_COLORS[fmt] || '#666' }}
+                              >
+                                {PLUGIN_TYPE_ICONS[fmt] || fmt}
+                              </span>
+                              {formatPaths.map((formatPath, pathIndex) => (
+                                <span key={`${typedFmt}-${formatPath}`} className={styles.pathActionGroup}>
+                                  <button
+                                    className={styles.openPathButton}
+                                    onClick={async () => {
+                                      const result = await window.electronAPI.openPluginPath(formatPath);
+                                      if (!result.success) {
+                                        const errMsg = lang === 'zh'
+                                          ? `无法打开路径：${formatPath}`
+                                          : `Unable to open path: ${formatPath}`;
+                                        alert(result.error ? `${errMsg}\n${result.error}` : errMsg);
+                                      }
+                                    }}
+                                    title={formatPath}
+                                  >
+                                    {formatPaths.length > 1
+                                      ? `${t('openLocation')} ${pathIndex + 1}`
+                                      : t('openLocation')}
+                                  </button>
+                                  <button
+                                    className={styles.copyPathButton}
+                                    onClick={() => {
+                                      void copyPluginPath(formatPath);
+                                    }}
+                                    title={formatPath}
+                                  >
+                                    {t('copyPath')}
+                                  </button>
+                                </span>
+                              ))}
+                            </span>
+                          );
+                        })}
                       </div>
                     </li>
                   ))}
@@ -495,6 +558,7 @@ export default function Home() {
               </div>
 
               {renderPluginSection()}
+              {copiedHint && <div className={styles.copiedHint}>{copiedHint}</div>}
             </>
           ) : softwareLoaded ? (
             <p className={styles.empty}>{t('noSoftware')}</p>
@@ -569,6 +633,7 @@ export default function Home() {
         downloadUpdate: () => Promise<void>;
         openReleasePage: () => void;
         checkForUpdate: () => Promise<{ available: boolean; version?: string }>;
+        openPluginPath: (pluginPath: string) => Promise<{ success: boolean; error?: string }>;
       };
     }
 }
