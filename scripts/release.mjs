@@ -85,9 +85,9 @@ function updateVersionFiles(version) {
   const githubBase = 'https://github.com/yzykevin/oh_my_music_studio/releases/download';
   const docs = readFileSync(DOCS_PATH, 'utf-8')
     .replace(/(releases\/download\/)[^/]+\/(OMS-[^"']+\.dmg)/g, `$1v${version}/OMS-${version}-arm64.dmg`)
-    .replace(/(releases\/download\/)[^/]+\/(OMS[.-][^"']+\.exe)/g, `$1v${version}/OMS.Setup.${version}.exe`)
+    .replace(/(releases\/download\/)[^/]+\/(OMS[.-][^"']+\.exe)/g, `$1v${version}/OMS-Setup-${version}.exe`)
     .replace(/(btnPrimary\.href = ')[^']+OMS-[^']+\.dmg'/g, `$1${githubBase}/v${version}/OMS-${version}-arm64.dmg'`)
-    .replace(/(btnPrimary\.href = ')[^']+OMS[.-][^']+\.exe'/g, `$1${githubBase}/v${version}/OMS.Setup.${version}.exe'`)
+    .replace(/(btnPrimary\.href = ')[^']+OMS[.-][^']+\.exe'/g, `$1${githubBase}/v${version}/OMS-Setup-${version}.exe'`)
     .replace(/>(v\d+\.\d+\.\d+)<\/text>/g, `>v${version}</text>`);
   writeFileSync(DOCS_PATH, docs);
 
