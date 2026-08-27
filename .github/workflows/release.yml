@@ -54,16 +54,17 @@ jobs:
       - name: Build macOS app
         run: npm run build && npm run build:all && npx electron-builder --publish never
 
-      - name: Upload DMG to release
+      - name: Upload macOS update artifacts to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
-          FILE=$(ls release/*.dmg | head -1)
-          gh release upload "$TAG" "$FILE" --clobber
-          if [ -f release/latest-mac.yml ]; then
-            gh release upload "$TAG" release/latest-mac.yml --clobber
-          fi
+          for FILE in release/*.dmg release/*.zip release/latest-mac.yml; do
+            [ -f "$FILE" ] && gh release upload "$TAG" "$FILE" --clobber
+          done
+          test -n "$(ls release/*.dmg 2>/dev/null)"
+          test -n "$(ls release/*.zip 2>/dev/null)"
+          test -f release/latest-mac.yml
 
   build-windows:
     needs: create-release
@@ -102,4 +103,17 @@ jobs:
           if ! ls *.exe 1>/dev/null 2>&1; then
             echo "No EXE found, listing all release files:"
             ls -la
+            exit 1
           fi
+          test -f latest.yml
+
+  publish-release:
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
+          gh release edit "$TAG" --repo "${{ github.repository }}" --draft=false --latest

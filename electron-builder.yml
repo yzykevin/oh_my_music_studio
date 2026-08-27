@@ -7,7 +7,10 @@ publish:
   owner: yzykevin
   repo: oh_my_music_studio
 mac:
-  target: dmg
+  # DMG is for manual installation; ZIP is required by Squirrel.Mac/electron-updater.
+  target:
+    - dmg
+    - zip
   icon: build/icon.icns
   category: public.app-category.music
   hardenedRuntime: true

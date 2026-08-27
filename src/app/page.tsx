@@ -393,13 +393,17 @@ export default function Home() {
           </button>
           <button
             className={styles.updateCheckBtn}
-            onClick={async () => {
-              setCheckingUpdate(true);
-              const result = await window.electronAPI.checkForUpdate();
-              setCheckingUpdate(false);
-              if (!result.available) {
-                const msg = lang === 'zh' ? '已是最新版本' : 'You are on the latest version';
-                alert(msg);
+              onClick={async () => {
+                setCheckingUpdate(true);
+                try {
+                  const result = await window.electronAPI.checkForUpdate();
+                  if (!result.available) {
+                    const msg = lang === 'zh' ? '已是最新版本' : 'You are on the latest version';
+                    alert(msg);
+                  }
+                } finally {
+                  setCheckingUpdate(false);
+                }
               }
             }}
             title={lang === 'zh' ? '检查更新' : 'Check for updates'}
@@ -427,7 +431,17 @@ export default function Home() {
                 className={styles.updateDownloadBtn}
                 onClick={async () => {
                   setUpdateDownloading(true);
-                  await window.electronAPI.downloadUpdate();
+                  try {
+                    const result = await window.electronAPI.downloadUpdate();
+                    if (!result.success) {
+                      throw new Error(result.error || 'Update download failed');
+                    }
+                  } catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    alert(lang === 'zh' ? `更新下载失败：${message}` : `Update download failed: ${message}`);
+                  } finally {
+                    setUpdateDownloading(false);
+                  }
                 }}
               >
                 {lang === 'zh' ? '下载' : 'Download'}
@@ -630,7 +644,7 @@ export default function Home() {
         onHardwareUpdate: (callback: (hardware: HardwareInfo) => void) => void;
         onUpdateAvailable: (callback: (info: { version: string }) => void) => void;
         onUpdateDownloaded: (callback: (info: { version: string }) => void) => void;
-        downloadUpdate: () => Promise<void>;
+        downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
         openReleasePage: () => void;
         checkForUpdate: () => Promise<{ available: boolean; version?: string }>;
         openPluginPath: (pluginPath: string) => Promise<{ success: boolean; error?: string }>;

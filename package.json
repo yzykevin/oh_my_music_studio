@@ -16,7 +16,8 @@
     "electron:build": "next build && npm run build:all && electron-builder --publish never",
     "test": "jest",
     "test:watch": "jest --watch",
-    "release": "node scripts/release.mjs"
+    "release": "node scripts/release.mjs",
+    "release:test": "node scripts/release.mjs --test"
   },
   "keywords": [
     "electron",
