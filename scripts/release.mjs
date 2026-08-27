@@ -135,27 +135,31 @@ function release(version) {
   const tag = `v${version}`;
   const repository = getRepository();
 
-  log('1/6', colors.bold('Checking release prerequisites...'));
+  log('1/7', colors.bold('Checking release prerequisites...'));
   checkCleanWorkingTree();
   run('gh', ['auth', 'status']);
   const existingTags = getOutput('git', ['tag', '--list', tag]);
   if (existingTags === tag) fail(`Tag ${tag} already exists. Use --dispatch ${tag} to rebuild it.`);
-  log('1/6', colors.green('✓ Prerequisites OK'));
+  log('1/7', colors.green('✓ Prerequisites OK'));
 
-  log('2/6', colors.bold(`Updating version to ${colors.cyan(version)}...`));
+  log('2/7', colors.bold('Running the complete local release test before publishing...'));
+  runLocalTest();
+  checkCleanWorkingTree();
+
+  log('3/7', colors.bold(`Updating version to ${colors.cyan(version)}...`));
   const oldVersion = updateVersionFiles(version);
   run('git', ['add', 'package.json', 'package-lock.json', 'docs/index.html']);
   run('git', ['commit', '-m', `chore: bump version to ${version}`]);
-  log('2/6', colors.green(`✓ ${oldVersion} → ${version}`));
+  log('3/7', colors.green(`✓ ${oldVersion} → ${version}`));
 
-  log('3/6', colors.bold('Creating release tag...'));
+  log('4/7', colors.bold('Creating release tag...'));
   run('git', ['tag', '-a', tag, '-m', `Release ${tag}`]);
-  log('4/6', colors.bold('Pushing commit and tag to GitHub...'));
+  log('5/7', colors.bold('Pushing commit and tag to GitHub...'));
   run('git', ['push', 'origin', 'HEAD']);
   run('git', ['push', 'origin', tag]);
 
-  log('5/6', colors.green('✓ GitHub Actions triggered'));
-  log('6/6', colors.bold('Release build is running on macOS and Windows.'));
+  log('6/7', colors.green('✓ GitHub Actions triggered'));
+  log('7/7', colors.bold('Release build is running on macOS and Windows.'));
   console.log(`\n${colors.green('✓')} Release ${tag} started for ${repository}`);
   console.log(`  Actions: https://github.com/${repository}/actions/workflows/release.yml`);
   console.log(`  Release: https://github.com/${repository}/releases/tag/${tag}`);

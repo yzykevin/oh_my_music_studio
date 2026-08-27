@@ -393,17 +393,16 @@ export default function Home() {
           </button>
           <button
             className={styles.updateCheckBtn}
-              onClick={async () => {
-                setCheckingUpdate(true);
-                try {
-                  const result = await window.electronAPI.checkForUpdate();
-                  if (!result.available) {
-                    const msg = lang === 'zh' ? '已是最新版本' : 'You are on the latest version';
-                    alert(msg);
-                  }
-                } finally {
-                  setCheckingUpdate(false);
+            onClick={async () => {
+              setCheckingUpdate(true);
+              try {
+                const result = await window.electronAPI.checkForUpdate();
+                if (!result.available) {
+                  const msg = lang === 'zh' ? '已是最新版本' : 'You are on the latest version';
+                  alert(msg);
                 }
+              } finally {
+                setCheckingUpdate(false);
               }
             }}
             title={lang === 'zh' ? '检查更新' : 'Check for updates'}
