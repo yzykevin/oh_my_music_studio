@@ -566,7 +566,13 @@ async function scanPluginsForType(
   });
 }
 
+export function getSoftwareTypeForCategory(category: MusicSoftware['category']): MusicSoftware['type'] {
+  return category === 'daw' ? 'daw' : category === 'driver' ? 'driver' : 'auxiliary';
+}
+
 async function detectApp(config: SoftwareConfig, category: MusicSoftware['category']): Promise<MusicSoftware | null> {
+  const type = getSoftwareTypeForCategory(category);
+
   for (const appName of config.searchKeywords) {
     const appPath = await spotlightSearch(`${appName}.app`);
     if (appPath && fs.existsSync(appPath)) {
@@ -575,7 +581,7 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
         name: config.name,
         path: appPath,
         version,
-        type: 'auxiliary',
+        type,
         category,
         vendor: config.vendor,
         detectedAt: Date.now(),
@@ -594,7 +600,7 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
         name: config.name,
         path: searchPath,
         version,
-        type: 'auxiliary',
+        type,
         category,
         vendor: config.vendor,
         detectedAt: Date.now(),
