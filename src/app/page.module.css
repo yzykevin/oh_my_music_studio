@@ -370,6 +370,44 @@
   color: var(--text-secondary);
 }
 
+.scanProgress {
+  margin: 0 1.5rem 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--bg-card);
+}
+
+.scanProgressHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.scanProgressTrack {
+  height: 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border-subtle);
+}
+
+.scanProgressBar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.35s ease;
+}
+
+.scanProgressPhase {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
 .skeleton {
   background: var(--bg-card);
   border-radius: 0.375rem;
