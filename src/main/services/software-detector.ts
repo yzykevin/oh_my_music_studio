@@ -31,6 +31,8 @@ interface SoftwareConfig {
   vendor?: string;
 }
 
+export type SoftwareScanProgress = (progress: number, phase: string) => void;
+
 function expandPath(p: string): string {
   if (p.startsWith('~')) {
     return path.join(process.env.HOME || '', p.slice(1));
@@ -566,7 +568,13 @@ async function scanPluginsForType(
   });
 }
 
+export function getSoftwareTypeForCategory(category: MusicSoftware['category']): MusicSoftware['type'] {
+  return category === 'daw' ? 'daw' : category === 'driver' ? 'driver' : 'auxiliary';
+}
+
 async function detectApp(config: SoftwareConfig, category: MusicSoftware['category']): Promise<MusicSoftware | null> {
+  const type = getSoftwareTypeForCategory(category);
+
   for (const appName of config.searchKeywords) {
     const appPath = await spotlightSearch(`${appName}.app`);
     if (appPath && fs.existsSync(appPath)) {
@@ -575,7 +583,7 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
         name: config.name,
         path: appPath,
         version,
-        type: 'auxiliary',
+        type,
         category,
         vendor: config.vendor,
         detectedAt: Date.now(),
@@ -594,7 +602,7 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
         name: config.name,
         path: searchPath,
         version,
-        type: 'auxiliary',
+        type,
         category,
         vendor: config.vendor,
         detectedAt: Date.now(),
@@ -610,14 +618,17 @@ async function detectApp(config: SoftwareConfig, category: MusicSoftware['catego
   return null;
 }
 
-export async function scanMusicSoftware(): Promise<MusicSoftware[]> {
+export async function scanMusicSoftware(onProgress?: SoftwareScanProgress): Promise<MusicSoftware[]> {
   if (process.platform !== 'darwin') return [];
+
+  onProgress?.(0, 'Scanning DAWs');
 
   const [dawResults, auxResults, driverResults] = await Promise.all([
     Promise.all(MAC_DAW_CONFIGS.map(c => detectApp(c, 'daw'))),
     Promise.all(MAC_AUXILIARY_CONFIGS.map(c => detectApp(c, 'auxiliary'))),
     Promise.all(MAC_DRIVER_CONFIGS.map(c => detectApp(c, 'driver'))),
   ]);
+  onProgress?.(30, 'Scanning auxiliary software');
 
   const results: MusicSoftware[] = [
     ...dawResults.filter((a): a is NonNullable<typeof a> => a !== null),
@@ -643,12 +654,15 @@ export async function scanMusicSoftware(): Promise<MusicSoftware[]> {
     });
   }
 
+  onProgress?.(45, 'Scanning plugins');
+
   const pluginResults = await Promise.all(
     Object.entries(MAC_PLUGIN_PATHS).map(([type, paths]) =>
       scanPluginsForType(type as 'vst' | 'vst3' | 'au' | 'aax', paths as string[]),
     ),
   );
   results.push(...pluginResults.flat());
+  onProgress?.(70, 'Finalizing software inventory');
 
   const bundleIdGroups: Record<string, MusicSoftware[]> = {};
   for (const p of results) {
