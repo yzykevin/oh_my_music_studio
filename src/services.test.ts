@@ -12,6 +12,7 @@ describe('Vendor Extraction', () => {
     { name: 'Pianoverse', expected: 'IK Multimedia' },
     { name: 'MODO DRUM', expected: 'IK Multimedia' },
     { name: 'SampleTron 2', expected: 'IK Multimedia' },
+    { name: 'Lurssen Mastering Console', expected: 'IK Multimedia' },
 
     { name: 'Ozone', expected: 'iZotope' },
     { name: 'Neutron', expected: 'iZotope' },
@@ -42,6 +43,7 @@ describe('Vendor Extraction', () => {
     { name: 'Pro-Q 3', expected: 'FabFilter' },
 
     { name: 'Kontakt', expected: 'Native Instruments' },
+    { name: 'Komplete Kontrol', expected: 'Native Instruments' },
     { name: 'Massive', expected: 'Native Instruments' },
     { name: 'Reaktor', expected: 'Native Instruments' },
     { name: 'Guitar Rig', expected: 'Native Instruments' },
