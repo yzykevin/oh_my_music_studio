@@ -42,6 +42,8 @@ export interface HardwareInfo {
   bluetoothAudio: BluetoothAudioDevice[];
 }
 
+export type HardwareScanProgress = (progress: number, phase: string) => void;
+
 function parseAudioDevice(item: Record<string, unknown>): AudioDevice {
   const transportRaw = (item.coreaudio_device_transport as string) ?? 'unknown';
   let transport = 'unknown';
@@ -173,13 +175,17 @@ export async function detectBluetoothAudio(): Promise<BluetoothAudioDevice[]> {
   }
 }
 
-export async function detectAllHardware(): Promise<HardwareInfo> {
-  const [audioDevices, midiDevices, runningDAWs, loginItems, bluetoothAudio] = await Promise.all([
-    detectAudioDevices(),
-    detectMidiDevices(),
-    detectRunningDAWs(),
-    detectLoginItems(),
-    detectBluetoothAudio(),
-  ]);
+export async function detectAllHardware(onProgress?: HardwareScanProgress): Promise<HardwareInfo> {
+  onProgress?.(0, 'Scanning audio devices');
+  const audioDevices = await detectAudioDevices();
+  onProgress?.(20, 'Scanning MIDI devices');
+  const midiDevices = await detectMidiDevices();
+  onProgress?.(40, 'Checking running DAWs');
+  const runningDAWs = await detectRunningDAWs();
+  onProgress?.(60, 'Scanning login items');
+  const loginItems = await detectLoginItems();
+  onProgress?.(80, 'Scanning Bluetooth devices');
+  const bluetoothAudio = await detectBluetoothAudio();
+  onProgress?.(100, 'Hardware scan complete');
   return { audioDevices, midiDevices, runningDAWs, loginItems, bluetoothAudio };
 }

@@ -68,6 +68,7 @@ export default function Home() {
   const [expandedVendors, setExpandedVendors] = useState<Set<string>>(new Set());
   const [hardware, setHardware] = useState<HardwareInfo | null>(null);
   const [hardwareLoaded, setHardwareLoaded] = useState(false);
+  const [scanProgress, setScanProgress] = useState({ overall: 0, phase: 'Starting scan' });
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
@@ -93,6 +94,10 @@ export default function Home() {
     window.electronAPI.onHardwareUpdate((hw) => {
       setHardware(hw);
       setHardwareLoaded(true);
+    });
+
+    window.electronAPI.onScanProgress((update) => {
+      setScanProgress({ overall: update.overall, phase: update.phase });
     });
 
     window.electronAPI.scanSoftware().then((sw) => {
@@ -413,6 +418,19 @@ export default function Home() {
         </div>
       </header>
 
+      {(!softwareLoaded || !hardwareLoaded) && (
+        <div className={styles.scanProgress} role="status" aria-live="polite">
+          <div className={styles.scanProgressHeader}>
+            <span>{lang === 'zh' ? '正在扫描系统' : 'Scanning system'}</span>
+            <span>{scanProgress.overall}%</span>
+          </div>
+          <div className={styles.scanProgressTrack}>
+            <div className={styles.scanProgressBar} style={{ width: `${scanProgress.overall}%` }} />
+          </div>
+          <span className={styles.scanProgressPhase}>{scanProgress.phase}</span>
+        </div>
+      )}
+
       {updateVersion && (
         <div className={styles.updateBanner}>
           <span>
@@ -641,6 +659,7 @@ export default function Home() {
         writePdfFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
         onSoftwareUpdate: (callback: (software: MusicSoftware[]) => void) => void;
         onHardwareUpdate: (callback: (hardware: HardwareInfo) => void) => void;
+        onScanProgress: (callback: (update: { scope: 'software' | 'hardware'; progress: number; overall: number; phase: string }) => void) => void;
         onUpdateAvailable: (callback: (info: { version: string }) => void) => void;
         onUpdateDownloaded: (callback: (info: { version: string }) => void) => void;
         downloadUpdate: () => Promise<{ success: boolean; error?: string }>;

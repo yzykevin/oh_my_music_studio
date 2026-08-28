@@ -39,6 +39,13 @@ interface HardwareInfo {
   bluetoothAudio: BluetoothAudioDevice[];
 }
 
+interface ScanProgressUpdate {
+  scope: 'software' | 'hardware';
+  progress: number;
+  overall: number;
+  phase: string;
+}
+
 const electronAPI = {
   getSystemInfo: () => ipcRenderer.invoke('system:info'),
   scanSoftware: () => ipcRenderer.invoke('software:scan'),
@@ -55,6 +62,9 @@ const electronAPI = {
   },
   onHardwareUpdate: (callback: (hardware: HardwareInfo) => void) => {
     ipcRenderer.on('hardware:update', (_event, hardware) => callback(hardware));
+  },
+  onScanProgress: (callback: (update: ScanProgressUpdate) => void) => {
+    ipcRenderer.on('scan:progress', (_event, update) => callback(update));
   },
   onUpdateAvailable: (callback: (info: { version: string }) => void) => {
     ipcRenderer.on('update:available', (_event, info) => callback(info));

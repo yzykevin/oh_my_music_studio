@@ -1,4 +1,18 @@
-import { extractVendorFromPluginName } from './main/services/software-detector';
+import {
+  extractVendorFromPluginName,
+  getSoftwareTypeForCategory,
+} from './main/services/software-detector';
+
+describe('Software type mapping', () => {
+  test('keeps detected DAWs as type daw for report exports', () => {
+    expect(getSoftwareTypeForCategory('daw')).toBe('daw');
+  });
+
+  test('maps auxiliary and driver categories to their matching types', () => {
+    expect(getSoftwareTypeForCategory('auxiliary')).toBe('auxiliary');
+    expect(getSoftwareTypeForCategory('driver')).toBe('driver');
+  });
+});
 
 describe('Vendor Extraction', () => {
   const testCases = [
