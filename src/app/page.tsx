@@ -661,8 +661,8 @@ export default function Home() {
         onHardwareUpdate: (callback: (hardware: HardwareInfo) => void) => void;
         onScanProgress: (callback: (update: { scope: 'software' | 'hardware'; progress: number; overall: number; phase: string }) => void) => void;
         onUpdateAvailable: (callback: (info: { version: string }) => void) => void;
-        onUpdateDownloaded: (callback: (info: { version: string }) => void) => void;
-        downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
+        onUpdateDownloaded: (callback: (info: { version: string; downloadedFile?: string }) => void) => void;
+        downloadUpdate: () => Promise<{ success: boolean; downloadedFile?: string; error?: string }>;
         openReleasePage: () => void;
         checkForUpdate: () => Promise<{ available: boolean; version?: string }>;
         openPluginPath: (pluginPath: string) => Promise<{ success: boolean; error?: string }>;

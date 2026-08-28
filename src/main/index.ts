@@ -38,6 +38,7 @@ function sendScanProgress(scope: 'software' | 'hardware', progress: number, phas
 function initAutoUpdater(): void {
   autoUpdater.logger = log;
   autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = true;
 
   autoUpdater.on('checking-for-update', () => {
     log.info('[AutoUpdater] Checking for updates...');
@@ -60,8 +61,14 @@ function initAutoUpdater(): void {
   });
 
   autoUpdater.on('update-downloaded', (info) => {
-    log.info(`[AutoUpdater] Update downloaded: ${info.version}`);
-    mainWindow?.webContents.send('update:downloaded', { version: info.version });
+    log.info(`[AutoUpdater] Update downloaded: ${info.version} (${info.downloadedFile})`);
+    mainWindow?.webContents.send('update:downloaded', {
+      version: info.version,
+      downloadedFile: info.downloadedFile,
+    });
+    // The user explicitly started the download from the update banner. Install
+    // the verified package automatically as soon as electron-updater finishes.
+    setTimeout(() => autoUpdater.quitAndInstall(false, true), 500);
   });
 
   if (!isDev) {
@@ -346,8 +353,8 @@ ipcMain.handle('dialog:show-save', async (_event, {
 
 ipcMain.handle('update:download', async () => {
   try {
-    await autoUpdater.downloadUpdate();
-    return { success: true };
+    const downloadedFiles = await autoUpdater.downloadUpdate();
+    return { success: true, downloadedFile: downloadedFiles[0] };
   } catch (err) {
     return { success: false, error: String(err) };
   }

@@ -69,10 +69,14 @@ const electronAPI = {
   onUpdateAvailable: (callback: (info: { version: string }) => void) => {
     ipcRenderer.on('update:available', (_event, info) => callback(info));
   },
-  onUpdateDownloaded: (callback: (info: { version: string }) => void) => {
+  onUpdateDownloaded: (callback: (info: { version: string; downloadedFile?: string }) => void) => {
     ipcRenderer.on('update:downloaded', (_event, info) => callback(info));
   },
-  downloadUpdate: () => ipcRenderer.invoke('update:download') as Promise<{ success: boolean; error?: string }>,
+  downloadUpdate: () => ipcRenderer.invoke('update:download') as Promise<{
+    success: boolean;
+    downloadedFile?: string;
+    error?: string;
+  }>,
   installUpdate: () => ipcRenderer.invoke('update:install'),
   openReleasePage: () => ipcRenderer.invoke('update:openRelease'),
   checkForUpdate: () => ipcRenderer.invoke('update:check') as Promise<{ available: boolean; version?: string }>,
