@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
 import styles from './ExportMenu.module.css';
+import { groupPluginsByName } from '../../shared/software-utils';
 
 const pdfStyles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica' },
@@ -21,6 +22,7 @@ interface ReportData {
     name: string;
     vendor?: string;
     type: string;
+    category: string;
     version: string;
   }>;
   hardware: {
@@ -35,6 +37,7 @@ interface ExportMenuProps {
     name: string;
     vendor?: string;
     type: string;
+    category: string;
     version: string;
   }>;
   hardware: {
@@ -45,9 +48,11 @@ interface ExportMenuProps {
 }
 
 function MusicStudioReport({ data }: { data: ReportData }) {
-  const daws = data.software.filter(s => s.type === 'daw');
-  const plugins = data.software.filter(s => s.type !== 'daw' && s.type !== 'auxiliary' && s.type !== 'driver' && s.type !== 'ilok');
-  const auxiliaries = data.software.filter(s => s.type === 'auxiliary');
+  const daws = data.software.filter(s => s.category === 'daw');
+  const plugins = groupPluginsByName(
+    data.software.filter(s => s.category === 'plugin'),
+  );
+  const auxiliaries = data.software.filter(s => s.category === 'auxiliary');
 
   return (
     <Document>
@@ -66,9 +71,9 @@ function MusicStudioReport({ data }: { data: ReportData }) {
 
         <View style={pdfStyles.section}>
           <Text style={pdfStyles.sectionTitle}>Plugins ({plugins.length})</Text>
-          {plugins.map((p, i) => (
+          {plugins.map(({ plugin: p, formats }, i) => (
             <View key={i} style={pdfStyles.pluginRow}>
-              <Text>{p.vendor ?? 'Other'} — {p.name} [{p.type.toUpperCase()}]</Text>
+              <Text>{p.vendor ?? 'Other'} — {p.name} [{formats.map(format => format.toUpperCase()).join('/')}]</Text>
             </View>
           ))}
         </View>
@@ -139,9 +144,11 @@ export function ExportMenu({ software, hardware }: ExportMenuProps) {
       filters: [{ name: 'Markdown', extensions: ['md'] }],
     });
     if (!filePath) return;
-    const daws = software.filter(s => s.type === 'daw');
-    const plugins = software.filter(s => !['daw', 'auxiliary', 'driver', 'ilok'].includes(s.type));
-    const auxiliaries = software.filter(s => s.type === 'auxiliary');
+    const daws = software.filter(s => s.category === 'daw');
+    const plugins = groupPluginsByName(
+      software.filter(s => s.category === 'plugin'),
+    );
+    const auxiliaries = software.filter(s => s.category === 'auxiliary');
 
     let md = '# OMS Report\n\n';
     md += `Generated: ${new Date().toLocaleString()}\n\n`;
@@ -151,14 +158,14 @@ export function ExportMenu({ software, hardware }: ExportMenuProps) {
     }
     md += `\n## Plugins (${plugins.length})\n`;
     const byVendor: Record<string, typeof plugins> = {};
-    for (const p of plugins) {
-      const v = p.vendor ?? 'Other';
-      (byVendor[v] ??= []).push(p);
+    for (const plugin of plugins) {
+      const v = plugin.plugin.vendor ?? 'Other';
+      (byVendor[v] ??= []).push(plugin);
     }
     for (const [vendor, vplugins] of Object.entries(byVendor).sort(([a], [b]) => a.localeCompare(b))) {
       md += `### ${vendor} (${vplugins.length})\n`;
-      for (const p of vplugins) {
-        md += `- ${p.name} [${p.type.toUpperCase()}]\n`;
+      for (const { plugin: p, formats } of vplugins) {
+        md += `- ${p.name} [${formats.map(format => format.toUpperCase()).join('/')}]\n`;
       }
       md += '\n';
     }

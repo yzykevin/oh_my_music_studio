@@ -19,6 +19,7 @@ log.info('Application starting...');
 
 let mainWindow: BrowserWindow | null = null;
 let softwareList: MusicSoftware[] = [];
+let softwareScanPromise: Promise<MusicSoftware[]> | null = null;
 let softwareScanProgress = 0;
 let hardwareScanProgress = 0;
 
@@ -243,14 +244,29 @@ function createWindow(): void {
 }
 
 async function updateSoftwareList(): Promise<void> {
+  if (softwareScanPromise) {
+    await softwareScanPromise;
+    return;
+  }
+
+  softwareScanPromise = scanMusicSoftware((progress, phase) => sendScanProgress('software', progress, phase))
+    .then((results) => {
+      softwareList = results;
+      log.info(`Found ${softwareList.length} music software items`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('software:update', softwareList);
+      }
+      return softwareList;
+    })
+    .catch((error) => {
+      log.error('Failed to scan software:', error);
+      return softwareList;
+    });
+
   try {
-    softwareList = await scanMusicSoftware((progress, phase) => sendScanProgress('software', progress, phase));
-    log.info(`Found ${softwareList.length} music software items`);
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('software:update', softwareList);
-    }
-  } catch (error) {
-    log.error('Failed to scan software:', error);
+    await softwareScanPromise;
+  } finally {
+    softwareScanPromise = null;
   }
 }
 
@@ -261,16 +277,7 @@ function startBackgroundScans(): void {
   sendScanProgress('software', 0, 'Starting software scan');
   sendScanProgress('hardware', 0, 'Starting hardware scan');
 
-  scanMusicSoftware((progress, phase) => sendScanProgress('software', progress, phase)).then((results) => {
-    softwareList = results;
-    sendScanProgress('software', 100, 'Software scan complete');
-    log.info(`Background software scan complete: ${results.length} items`);
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('software:update', results);
-    }
-  }).catch((error) => {
-    log.error('Background software scan failed:', error);
-  });
+  void updateSoftwareList();
 
   detectAllHardware((progress, phase) => sendScanProgress('hardware', progress, phase)).then((hw) => {
     sendScanProgress('hardware', 100, 'Hardware scan complete');

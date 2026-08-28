@@ -9,6 +9,7 @@ import { HardwarePanel } from './components/HardwarePanel';
 import { SummaryCards } from './components/SummaryCards';
 import { ExportMenu } from './components/ExportMenu';
 import { useTheme } from './context/ThemeContext';
+import { groupPluginsByName } from '../shared/software-utils';
 
 const FormatPieChart = dynamic(() => import('./components/Charts').then(m => ({ default: m.FormatPieChart })), {
   ssr: false,
@@ -125,36 +126,16 @@ export default function Home() {
 
   const pluginsWithFormats = useMemo(() => {
     const plugins = software.filter(s => s.category === 'plugin');
-    const grouped: Record<string, PluginWithFormats> = {};
-
-    for (const plugin of plugins) {
-      const key = plugin.name.toLowerCase();
-      if (!grouped[key]) {
-        grouped[key] = {
-          ...plugin,
-          formats: [plugin.type],
-          pathsByFormat: {},
-        };
+    return groupPluginsByName(plugins).map(({ plugin, formats, entries }) => {
+      const pathsByFormat: PluginWithFormats['pathsByFormat'] = {};
+      for (const entry of entries) {
+        if (!['vst', 'vst3', 'au', 'aax'].includes(entry.type)) continue;
+        const format = entry.type as 'vst' | 'vst3' | 'au' | 'aax';
+        const existingPaths = pathsByFormat[format] ?? [];
+        if (!existingPaths.includes(entry.path)) pathsByFormat[format] = [...existingPaths, entry.path];
       }
-
-      if (!grouped[key].formats.includes(plugin.type)) {
-        grouped[key].formats.push(plugin.type);
-      }
-
-      if (
-        plugin.type === 'vst' ||
-        plugin.type === 'vst3' ||
-        plugin.type === 'au' ||
-        plugin.type === 'aax'
-      ) {
-        const existingPaths = grouped[key].pathsByFormat[plugin.type] ?? [];
-        if (!existingPaths.includes(plugin.path)) {
-          grouped[key].pathsByFormat[plugin.type] = [...existingPaths, plugin.path];
-        }
-      }
-    }
-
-    return Object.values(grouped);
+      return { ...plugin, formats, pathsByFormat };
+    });
   }, [software]);
 
   const pluginVendors = useMemo(

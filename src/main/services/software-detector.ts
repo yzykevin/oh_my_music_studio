@@ -1,9 +1,80 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+const LOCAL_APPLICATION_PATHS = [
+  '/Applications',
+  '/System/Applications',
+  '~/Applications',
+];
+
+// `mdfind` without `-onlyin` searches every indexed volume. That includes
+// mounted WebDAV/SMB/NFS volumes, which can leave the child process waiting
+// forever when the remote server is unavailable. Keep a cached list of remote
+// mount points so all scan inputs stay on local filesystems.
+const REMOTE_FILESYSTEM_TYPES = new Set([
+  'afp',
+  'cifs',
+  'fuse',
+  'fuseblk',
+  'nfs',
+  'smbfs',
+  'sshfs',
+  'webdav',
+]);
+
+let remoteMountPointsPromise: Promise<string[]> | null = null;
+
+export function parseRemoteMountPoints(mountOutput: string): string[] {
+  return mountOutput
+    .split('\n')
+    .map((line) => {
+      const match = line.match(/\s+on\s+(.+?)\s+\(([^)]*)\)\s*$/);
+      if (!match) return null;
+
+      const mountPoint = match[1].trim();
+      const options = match[2].split(',').map((option) => option.trim().toLowerCase());
+      const filesystemType = options[0] ?? '';
+      const isRemote = REMOTE_FILESYSTEM_TYPES.has(filesystemType) || !options.includes('local');
+      return isRemote ? mountPoint : null;
+    })
+    .filter((mountPoint): mountPoint is string => mountPoint !== null);
+}
+
+export function isPathOnRemoteMount(scanPath: string, remoteMountPoints: string[]): boolean {
+  const normalizedPath = path.resolve(scanPath);
+  return remoteMountPoints.some((mountPoint) => {
+    const normalizedMountPoint = path.resolve(mountPoint);
+    return normalizedPath === normalizedMountPoint || normalizedPath.startsWith(`${normalizedMountPoint}${path.sep}`);
+  });
+}
+
+async function getRemoteMountPoints(): Promise<string[]> {
+  if (remoteMountPointsPromise) return remoteMountPointsPromise;
+
+  remoteMountPointsPromise = execFileAsync('/sbin/mount', {
+    timeout: 2000,
+    maxBuffer: 1024 * 1024,
+  }).then(({ stdout }) => {
+    return parseRemoteMountPoints(stdout);
+  }).catch(() => {
+    // If mount inspection itself fails, scan only system locations. Treating
+    // the user's home directory as local in that case could reintroduce a
+    // network-backed home or plugin directory.
+    return ['/Users'];
+  });
+
+  return remoteMountPointsPromise;
+}
+
+async function isLocalScanPath(scanPath: string): Promise<boolean> {
+  const remoteMountPoints = await getRemoteMountPoints();
+  return !isPathOnRemoteMount(scanPath, remoteMountPoints);
+}
 
 export interface MusicSoftware {
   name: string;
@@ -55,37 +126,23 @@ async function getAppVersionMac(appPath: string): Promise<string> {
   return 'unknown';
 }
 
-async function spotlightSearch(appName: string): Promise<string | null> {
-  try {
-    const { stdout } = await execAsync(
-      `mdfind "kMDItemFSName == '${appName}'" 2>/dev/null | head -1`
-    );
-    const result = stdout.trim();
-    return result || null;
-  } catch {
-    return null;
-  }
-}
-
 async function searchAppInApplications(keywords: string[]): Promise<string | null> {
-  const searchPaths = [
-    '/Applications',
-    '/System/Applications',
-    expandPath('~/Applications'),
-  ];
+  const searchPaths = LOCAL_APPLICATION_PATHS.map(expandPath);
 
   for (const searchPath of searchPaths) {
-    if (!fs.existsSync(searchPath)) continue;
+    if (!(await isLocalScanPath(searchPath)) || !fs.existsSync(searchPath)) continue;
     try {
       const files = fs.readdirSync(searchPath);
       for (const file of files) {
         if (!file.endsWith('.app')) continue;
+        const appPath = path.join(searchPath, file);
+        if (fs.lstatSync(appPath).isSymbolicLink() || !fs.statSync(appPath).isDirectory()) continue;
         const fileLower = file.toLowerCase();
         const matches = keywords.every(keyword =>
           keyword.length <= 2 || fileLower.includes(keyword.toLowerCase())
         );
         if (matches) {
-          return path.join(searchPath, file);
+          return appPath;
         }
       }
     } catch {
@@ -490,12 +547,14 @@ async function scanPluginsForType(
 
   for (const pluginPath of pluginPaths) {
     const expandedPath = expandPath(pluginPath);
-    if (!fs.existsSync(expandedPath)) continue;
+    if (!(await isLocalScanPath(expandedPath)) || !fs.existsSync(expandedPath)) continue;
 
     try {
       const entries = fs.readdirSync(expandedPath, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path.join(expandedPath, entry.name);
+        if (entry.isSymbolicLink()) continue;
+        if (!(await isLocalScanPath(fullPath))) continue;
         const isDir = entry.isDirectory();
         const isVst3 = entry.name.endsWith('.vst3');
         const isComponent = entry.name.endsWith('.component');
@@ -574,29 +633,12 @@ export function getSoftwareTypeForCategory(category: MusicSoftware['category']):
   return category === 'daw' ? 'daw' : category === 'driver' ? 'driver' : 'auxiliary';
 }
 
-async function detectApp(config: SoftwareConfig, category: MusicSoftware['category']): Promise<MusicSoftware | null> {
+async function detectApp(
+  config: SoftwareConfig,
+  category: 'daw' | 'auxiliary' | 'driver',
+): Promise<MusicSoftware | null> {
   const type = getSoftwareTypeForCategory(category);
-
   for (const appName of config.searchKeywords) {
-    const appPath = await spotlightSearch(`${appName}.app`);
-    if (appPath && fs.existsSync(appPath)) {
-      const version = await getAppVersionMac(appPath);
-      return {
-        name: config.name,
-        path: appPath,
-        version,
-        type,
-        category,
-        vendor: config.vendor,
-        detectedAt: Date.now(),
-        architectures: [],
-        is64Bit: false,
-        is32Bit: false,
-        isDuplicate: false,
-        isOrphaned: false,
-      };
-    }
-
     const searchPath = await searchAppInApplications([appName]);
     if (searchPath && fs.existsSync(searchPath)) {
       const version = await getAppVersionMac(searchPath);
@@ -630,7 +672,6 @@ export async function scanMusicSoftware(onProgress?: SoftwareScanProgress): Prom
     Promise.all(MAC_AUXILIARY_CONFIGS.map(c => detectApp(c, 'auxiliary'))),
     Promise.all(MAC_DRIVER_CONFIGS.map(c => detectApp(c, 'driver'))),
   ]);
-  onProgress?.(30, 'Scanning auxiliary software');
 
   const results: MusicSoftware[] = [
     ...dawResults.filter((a): a is NonNullable<typeof a> => a !== null),
@@ -638,7 +679,9 @@ export async function scanMusicSoftware(onProgress?: SoftwareScanProgress): Prom
     ...driverResults.filter((a): a is NonNullable<typeof a> => a !== null),
   ];
 
-  const ilokPath = await spotlightSearch('iLok License Manager.app');
+  onProgress?.(30, 'Scanning auxiliary software');
+
+  const ilokPath = await searchAppInApplications(['iLok License Manager']);
   if (ilokPath) {
     results.push({
       name: 'iLok License Manager',
@@ -664,6 +707,7 @@ export async function scanMusicSoftware(onProgress?: SoftwareScanProgress): Prom
     ),
   );
   results.push(...pluginResults.flat());
+
   onProgress?.(70, 'Finalizing software inventory');
 
   const bundleIdGroups: Record<string, MusicSoftware[]> = {};
@@ -701,5 +745,6 @@ export async function scanMusicSoftware(onProgress?: SoftwareScanProgress): Prom
     }
   }
 
+  onProgress?.(100, 'Software scan complete');
   return results;
 }

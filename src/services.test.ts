@@ -1,7 +1,43 @@
 import {
   extractVendorFromPluginName,
   getSoftwareTypeForCategory,
+  isPathOnRemoteMount,
+  parseRemoteMountPoints,
 } from './main/services/software-detector';
+import { groupPluginsByName } from './shared/software-utils';
+
+describe('Plugin grouping', () => {
+  it('uses one count for a plugin installed in multiple formats', () => {
+    const grouped = groupPluginsByName([
+      { name: 'Example', type: 'vst3' },
+      { name: 'Example', type: 'au' },
+      { name: 'Other', type: 'vst' },
+    ]);
+
+    expect(grouped).toHaveLength(2);
+    expect(grouped[0].formats).toEqual(['vst3', 'au']);
+    expect(grouped[0].entries).toHaveLength(2);
+  });
+});
+
+describe('Remote filesystem filtering', () => {
+  it('recognizes remote mount types and non-local mounts', () => {
+    const mounts = parseRemoteMountPoints([
+      '/dev/disk3s1s1 on / (apfs, sealed, local, read-only, journaled)',
+      'https://app.koofr.net/dav/ on /Users/kevin/Koofr Network Drive (webdav, nodev, noexec)',
+      'server:/share on /Volumes/share (nfs, nodev, nosuid)',
+    ].join('\n'));
+
+    expect(mounts).toEqual(['/Users/kevin/Koofr Network Drive', '/Volumes/share']);
+  });
+
+  it('matches a remote mount and its children without matching similarly named paths', () => {
+    const mount = '/Users/kevin/Koofr Network Drive';
+
+    expect(isPathOnRemoteMount(`${mount}/Projects`, [mount])).toBe(true);
+    expect(isPathOnRemoteMount('/Users/kevin/Koofr Network Drive Backup', [mount])).toBe(false);
+  });
+});
 
 describe('Software type mapping', () => {
   test('keeps detected DAWs as type daw for report exports', () => {
